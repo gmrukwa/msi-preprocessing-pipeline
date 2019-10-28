@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 from functional import as_arguments_of, broadcast, for_each, pipe, progress_bar
-from io_utils import text_files
+
+from components.io_utils import text_files
 
 
 metadata_pattern = re.compile('_R[0-9]+X[0-9]+Y[0-9]+_')

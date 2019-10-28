@@ -20,8 +20,9 @@ import numpy as np
 from tqdm import tqdm
 
 from functional import for_each, pipe, progress_bar
-from spectrum.alignment import pafft
-from utils import subdirectories
+
+from components.spectrum.alignment import pafft
+from components.utils import subdirectories
 
 
 def input_filename(dataset_root):

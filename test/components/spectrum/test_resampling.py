@@ -3,20 +3,20 @@ import unittest
 import numpy as np
 from numpy import testing as npt
 
-import spectrum.resampling
+import components.spectrum.resampling as resampling
 
 
 class TestCenterizedScaledDomain(unittest.TestCase):
     def test_has_required_number_of_elements(self):
-        domain = spectrum.resampling._centered_scaled_domain(10)
+        domain = resampling._centered_scaled_domain(10)
         self.assertEqual(domain.size, 10)
 
     def test_is_centerized_to_zero(self):
-        domain = spectrum.resampling._centered_scaled_domain(10)
+        domain = resampling._centered_scaled_domain(10)
         self.assertAlmostEqual(domain.mean(), 0., places=3)
 
     def test_is_scaled_to_1(self):
-        domain = spectrum.resampling._centered_scaled_domain(10)
+        domain = resampling._centered_scaled_domain(10)
         self.assertAlmostEqual(domain.max(), 1., places=3)
 
 
@@ -27,7 +27,7 @@ class TestEstimateNewAxis(unittest.TestCase):
         number_of_samples = 10
         expected_output = np.array([1, 1.0211, 1.5647, 2.6308, 4.2194,
                                     6.3306, 8.9642, 12.1203, 15.7989, 20])
-        new_axis = spectrum.resampling.estimate_new_axis(old_axis, number_of_samples, narrow_range)
+        new_axis = resampling.estimate_new_axis(old_axis, number_of_samples, narrow_range)
         npt.assert_almost_equal(new_axis, expected_output, decimal=4)
 
     def test_large_modelled_axis(self):
@@ -59,7 +59,7 @@ class TestEstimateNewAxis(unittest.TestCase):
             862914.92929, 881880.08225, 901051.37806, 920428.81673,
             940012.39826, 959802.12265, 979797.98989, 1000000
         ])
-        new_axis = spectrum.resampling.estimate_new_axis(old_axis, number_of_samples,
+        new_axis = resampling.estimate_new_axis(old_axis, number_of_samples,
                                                          narrow_range)
         npt.assert_almost_equal(new_axis, expected_output, decimal=4)
 

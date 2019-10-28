@@ -12,8 +12,8 @@ import sys
 from functional import pipe, progress_bar
 import numpy as np
 
-import spectrum.model as mdl
-from utils import subdirectories
+import components.spectrum.model as mdl
+from components.utils import subdirectories
 
 
 def input_filename(dataset_root):

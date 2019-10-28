@@ -2,8 +2,9 @@ from numba import jit
 import numpy as np
 from scipy.stats import norm
 
-from seeding import seeded
-from stats import matlab_alike_quantile as quantile, matlab_alike_iqr as iqr
+from components.seeding import seeded
+from components.stats import \
+    matlab_alike_quantile as quantile, matlab_alike_iqr as iqr
 
 norminv = norm.ppf
 

@@ -11,7 +11,8 @@ import sys
 from functional import for_each, pipe, progress_bar
 import numpy as np
 from tqdm import tqdm
-from utils import subdirectories
+
+from components.utils import subdirectories
 
 
 def scale_to_tic(spectrum, reference_tic):

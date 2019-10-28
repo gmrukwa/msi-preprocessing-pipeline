@@ -6,8 +6,8 @@ from functional import for_each, pipe, progress_bar
 import numpy as np
 from tqdm import tqdm
 
-from spectrum.outlier import detect
-from utils import subdirectories
+from components.spectrum.outlier import detect
+from components.utils import subdirectories
 
 
 def result_path(dataset_root):

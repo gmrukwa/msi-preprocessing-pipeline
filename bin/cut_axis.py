@@ -15,7 +15,8 @@ import sys
 from functional import pipe
 import numpy as np
 from tqdm import tqdm
-from utils import subdirectories
+
+from components.utils import subdirectories
 
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ import sys
 
 import numpy as np
 
-from spectrum.resampling import estimate_new_axis
+from components.spectrum.resampling import estimate_new_axis
 
 
 resample = np.interp

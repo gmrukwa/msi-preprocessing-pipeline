@@ -14,8 +14,8 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-import spectrum.smoothing
-import spectrum.peak
+import components.spectrum.smoothing
+import components.spectrum.peak
 
 
 if __name__ == '__main__':

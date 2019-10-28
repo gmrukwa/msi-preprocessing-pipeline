@@ -20,7 +20,7 @@ import sys
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, progress_bar
-from utils import subdirectories
+from components.utils import subdirectories
 
 
 def input_filename(dataset_root):

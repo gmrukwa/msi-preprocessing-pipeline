@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import experiment.convolve as conv
+import bin.convolve as conv
 
 
 mzs = np.arange(100)

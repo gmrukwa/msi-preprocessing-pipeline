@@ -20,7 +20,7 @@ from typing import List, NamedTuple, Tuple
 import pandas as pd
 import numpy as np
 
-import utils
+import components.utils as utils
 
 
 Arguments = NamedTuple('Arguments', [

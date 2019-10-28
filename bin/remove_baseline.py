@@ -21,7 +21,7 @@ from functional import pmap
 import numpy as np
 from tqdm import tqdm
 
-from spectrum.baseline import adaptive_remove
+from components.spectrum.baseline import adaptive_remove
 
 
 load_mzs = np.loadtxt

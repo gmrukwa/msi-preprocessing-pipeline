@@ -5,7 +5,7 @@ import numpy as np
 import numpy.testing as npt
 import scipy.stats
 
-import spectrum.outlier
+import components.spectrum.outlier as outlier
 
 
 def returns(value):
@@ -23,7 +23,7 @@ class TestDetect(unittest.TestCase):
                                 4, 5, 6, 7, 8, 10000, 1, 1, 1, 1, 1, 1, 1, 1, 2,
                                 3, 2, 3, 2, 1, 2, 1, 1, 2, 3, 2, 1, 2, 3, 10,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        outlier = spectrum.outlier.detect(random_tics)
+        outlier = outlier.detect(random_tics)
         npt.assert_equal(outlier, random_tics == 10000)
 
     def test_finds_outlier(self):
@@ -34,5 +34,5 @@ class TestDetect(unittest.TestCase):
                                dtype=float)
         outlier = 2**64 - 1
         random_tics[-1] = outlier
-        outliers = spectrum.outlier.detect(random_tics)
+        outliers = outlier.detect(random_tics)
         npt.assert_equal(outliers, random_tics == outlier)

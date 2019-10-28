@@ -19,7 +19,7 @@ import sys
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, progress_bar
-from io_utils import text_files
+from components.io_utils import text_files
 
 
 def spectrum_sampling_pipe(mzs):

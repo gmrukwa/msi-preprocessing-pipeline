@@ -4,7 +4,7 @@ from unittest.mock import patch
 import numpy as np
 import numpy.testing as npt
 
-import spectrum.baseline as ba
+import components.spectrum.baseline as ba
 
 
 class TestTrendExists(unittest.TestCase):

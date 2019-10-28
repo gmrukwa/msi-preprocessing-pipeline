@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-import spectrum.alignment as al
+import components.spectrum.alignment as al
 
 
 def simulate_mzs(n):

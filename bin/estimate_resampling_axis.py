@@ -17,8 +17,8 @@ import sys
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, report_value, take
-from io_utils import subdirectories, text_files
-from spectrum.resampling import estimate_new_axis
+from components.io_utils import subdirectories, text_files
+from components.spectrum.resampling import estimate_new_axis
 
 
 # ==============================================================================

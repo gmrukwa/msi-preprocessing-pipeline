@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-import spectrum.model as mdl
+import components.spectrum.model as mdl
 
 
 class TestMerge(unittest.TestCase):
