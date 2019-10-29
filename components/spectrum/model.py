@@ -100,7 +100,7 @@ def merge(components: Components, max_components: int=4, n_sigmas: int=4) -> \
 
 
 def apply_merging(data: np.ndarray, matches: Matches) -> np.ndarray:
-    return np.hstack(
+    return np.hstack([
         np.sum(data[:, start: start+size], axis=1, keepdims=True)
         for start, size in matches
-    ).astype(dtype=np.float32)
+    ]).astype(dtype=np.float32)

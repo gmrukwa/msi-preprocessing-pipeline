@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import numpy.testing as npt
 
-import stats
+import components.stats as stats
 
 
 class TestMatlabAlikeQuantiles(unittest.TestCase):
