@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM spectreteam/python_msi:v5.0.0
 
 COPY requirements/basic-strict.txt /requirements.txt
 

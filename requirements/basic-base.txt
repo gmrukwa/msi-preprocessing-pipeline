@@ -1,4 +1,5 @@
 git+https://github.com/gmrukwa/functional-helpers.git@2e68a8801f894a14601d70db76086ada723bac35#egg=functional_helpers
+git+https://github.com/spectre-team/spectre-data.git@e35d51173bc13c08f231d51f899d67db1f1770ec#egg=spectre_data
 numpy
 numba
 pandas
