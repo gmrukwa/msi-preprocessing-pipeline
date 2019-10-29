@@ -42,6 +42,10 @@ class DockerfileTask(luigi.contrib.docker_runner.DockerTask):
 
 
 class BasicDockerTask(DockerfileTask):
+    data_dir = luigi.Parameter()
+    intermediate_dir = luigi.Parameter()
+    result_dir = luigi.Parameter()
+
     @property
     def dockerfile(self):
         return 'docker/basic.dockerfile'
@@ -49,3 +53,11 @@ class BasicDockerTask(DockerfileTask):
     @property
     def tag(self):
         return 'msi-preprocessing:basic'
+    
+    @property
+    def binds(self):
+        return super().binds + [
+            '%s:/data' % self.data_dir,
+            '%s:/intermediate' % self.intermediate_dir,
+            '%s:/result' % self.result_dir,
+        ]
