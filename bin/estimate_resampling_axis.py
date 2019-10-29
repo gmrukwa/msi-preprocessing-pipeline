@@ -12,6 +12,7 @@ Find new common m/z axis. Path to datasets root is the parameter to the script.
 """
 
 from functools import partial, reduce
+import os
 import sys
 
 import numpy as np
@@ -110,7 +111,7 @@ build_new_axis = pipe(
 
 def main():
     new_axis = build_new_axis(sys.argv[1])
-    np.savetxt('new_mz_axis.txt', new_axis)
+    np.savetxt(os.path.join(sys.argv[2], 'new_mz_axis.txt'), new_axis)
 
 
 if __name__ == '__main__':
