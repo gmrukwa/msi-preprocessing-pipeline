@@ -1,0 +1,6 @@
+git+https://github.com/gmrukwa/functional-helpers.git@2e68a8801f894a14601d70db76086ada723bac35#egg=functional_helpers
+numpy
+numba
+pandas
+scipy
+tqdm
