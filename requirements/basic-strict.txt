@@ -1,0 +1,12 @@
+git+https://github.com/gmrukwa/functional-helpers.git@2e68a8801f894a14601d70db76086ada723bac35#egg=functional_helpers
+git+https://github.com/spectre-team/spectre-data.git@e35d51173bc13c08f231d51f899d67db1f1770ec#egg=spectre_data
+llvmlite==0.30.0
+numba==0.46.0
+numpy==1.17.3
+pandas==0.25.2
+python-dateutil==2.8.0
+pytz==2019.3
+scipy==1.3.1
+six==1.12.0
+tqdm==4.36.1
+typing==3.7.4.1
