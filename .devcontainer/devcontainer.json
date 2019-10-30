@@ -1,0 +1,31 @@
+{
+    "name": "msi-preprocessing",
+    "context": "..",
+    "dockerFile": "../docker/dev.dockerfile",
+  
+    "appPort": ["8082:8082"],
+  
+    "runArgs": ["-v", "/home/gmrukwa/.ssh:/home/vscode/.ssh:ro", "-u", "vscode"],
+  
+    "settings": { 
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "python.pythonPath": "/usr/local/bin/python",
+        "python.linting.pylintEnabled": true,
+        "python.linting.pylintPath": "/usr/local/bin/pylint",
+        "python.linting.enabled": true
+    },
+  
+    "extensions": [
+      "eamodio.gitlens",
+      "mutantdino.resourcemonitor",
+      "ms-python.python",
+      "angelo-breuer.clock",
+      "donjayamanne.githistory",
+      "tabnine.tabnine-vscode",
+      "redhat.vscode-yaml",
+      "formulahendry.code-runner"
+    ],
+  
+    "workspaceMount": "src=..,dst=/app,type=bind",
+    "workspaceFolder": "/app"
+}
