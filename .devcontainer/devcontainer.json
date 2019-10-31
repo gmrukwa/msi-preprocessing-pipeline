@@ -7,6 +7,7 @@
   
     "runArgs": [
         "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh-localhost:ro",
+        "-v", "${env:HOME}${env:USERPROFILE}/dummy-raw-msi:/data",
         "-u", "vscode"
     ],
 
