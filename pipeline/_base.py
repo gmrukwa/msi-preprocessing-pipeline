@@ -25,6 +25,7 @@ logger = logging.getLogger('luigi-interface')
 
 class BaseTask(luigi.Task):
     OUTPUT_DIR = '/data'
+    INPUT_DIR = '/data'
 
     @property
     @abstractmethod

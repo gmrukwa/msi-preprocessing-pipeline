@@ -6,6 +6,8 @@ from pipeline._base import AtomicTask, MakeIntermediateDir, NonAtomicTask
 
 
 class FindResamplingAxis(AtomicTask):
+    INPUT_DIR = os.path.join(AtomicTask.INPUT_DIR, 'raw')
+
     def requires(self):
         return MakeIntermediateDir()
 
