@@ -1,9 +1,11 @@
 from abc import ABCMeta, abstractmethod
+import logging
 import os
 import shutil
 
 import luigi
 
+logger = logging.getLogger('luigi-interface')
 
 # The processes that will be ran have following characteristics:
 # a) many directories -> few (or single) files (e.g. new m/z axis)
@@ -39,7 +41,15 @@ class BaseTask(luigi.Task):
 
 
 class AtomicTask(BaseTask):
-    OUTPUT_DIR = os.path.join(super().OUTPUT_DIR, 'intermediate')
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, 'intermediate')
+
+    # Overwrite of either ``run`` or ``_run` does the job.
+
+    def _run(self):
+        return super().run()
+    
+    def run(self):
+        return self._run()
 
 
 class NonAtomicTask(BaseTask, metaclass=ABCMeta):
