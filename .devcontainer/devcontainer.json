@@ -27,7 +27,5 @@
       "tabnine.tabnine-vscode",
       "redhat.vscode-yaml",
       "formulahendry.code-runner"
-    ],
-  
-    "workspaceFolder": "/app"
+    ]
 }
