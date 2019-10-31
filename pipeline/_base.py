@@ -73,3 +73,12 @@ class NonAtomicTask(BaseTask, metaclass=ABCMeta):
         
         for src, dst in zip(self.intercepted, self._output):
             shutil.move(src, dst)
+
+
+class MakeIntermediateDir(AtomicTask):
+    @property
+    def _output(self):
+        return [self.OUTPUT_DIR]
+    
+    def _run(self):
+        os.makedirs(self.OUTPUT_DIR, exist_ok=True)
