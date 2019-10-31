@@ -2,14 +2,17 @@ import os
 
 import luigi
 
-from pipeline.docker import BasicDockerTask
+from pipeline._base import AtomicTask, MakeIntermediateDir, NonAtomicTask
 
 
-class FindResamplingAxis(BasicDockerTask):
+class FindResamplingAxis(AtomicTask):
+    def requires(self):
+        return MakeIntermediateDir()
+
     @property
-    def command(self):
-        return 'python -m bin.estimate_resampling_axis /data /intermediate'
-
-    def output(self):
-        return luigi.LocalTarget(
-            os.path.join(self.intermediate_dir, 'new_mz_axis.txt'))
+    def _output(self):
+        return ['resampled_mz_axis.txt']
+    
+    def _run(self):
+        with open(self._rooted_output[0], 'w') as outfile:
+            outfile.write("Hello World!")
