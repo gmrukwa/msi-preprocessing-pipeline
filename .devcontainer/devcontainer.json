@@ -6,9 +6,11 @@
     "appPort": ["8082:8082"],
   
     "runArgs": [
-        "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh:ro",
+        "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh-localhost:ro",
         "-u", "vscode"
     ],
+
+    "postCreateCommand": "cp -r ~/.ssh-localhost ~/.ssh && sudo chown -R $(id -u):$(id -g) ~/.ssh && chmod 700 ~/.ssh && chmod 600 ~/.ssh/* && rm -f ~/.ssh/config",
   
     "settings": { 
         "terminal.integrated.shell.linux": "/bin/bash",
