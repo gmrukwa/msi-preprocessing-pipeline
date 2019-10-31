@@ -5,7 +5,10 @@
   
     "appPort": ["8082:8082"],
   
-    "runArgs": ["-v", "/home/gmrukwa/.ssh:/home/vscode/.ssh:ro", "-u", "vscode"],
+    "runArgs": [
+        "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh:ro",
+        "-u", "vscode"
+    ],
   
     "settings": { 
         "terminal.integrated.shell.linux": "/bin/bash",
@@ -26,6 +29,5 @@
       "formulahendry.code-runner"
     ],
   
-    "workspaceMount": "src=..,dst=/app,type=bind",
     "workspaceFolder": "/app"
 }
