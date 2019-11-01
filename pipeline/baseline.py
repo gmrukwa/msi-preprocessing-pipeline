@@ -26,7 +26,7 @@ class RemoveBaseline(BaseTask):
         with self.input()[0].open('r') as infile:
             mz_axis = np.loadtxt(infile)
         remover = baseline_remover(mz_axis)
-        with self.input()[1].open('rb') as infile:
+        with open(self.input()[1].path, 'rb') as infile:
             spectra = np.load(infile)
         lowered = pmap(remover,
                        tqdm(LuigiTqdm(spectra, self),
