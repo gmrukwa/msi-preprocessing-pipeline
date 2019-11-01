@@ -29,3 +29,27 @@ class FindResamplingAxis(AtomicTask):
         new_axis = build_new_axis(datasets)
         np.savetxt(os.path.join(self.OUTPUT_DIR, 'resampled_mz_axis.txt'),
                    new_axis)
+
+
+class ResampleDataset(NonAtomicTask):
+    INPUT_DIR = os.path.join(NonAtomicTask.INPUT_DIR, 'raw')
+    OUTPUT_DIR = os.path.join(NonAtomicTask.OUTPUT_DIR, 'resampled')
+
+    dataset = luigi.Parameter(description="Dataset to resample")
+
+    def requires(self):
+        return MakeDir(self.OUTPUT_DIR), FindResamplingAxis()
+    
+    @property
+    def _output(self):
+        return ["{0}.npy".format(self.dataset)]
+    
+    def _run(self):
+        from bin.resample_datasets import dataset_sampling_pipe
+        axis_path = os.path.join(AtomicTask.OUTPUT_DIR,
+                                 'resampled_mz_axis.txt')
+        new_axis = np.loadtxt(axis_path)
+        resampled = dataset_sampling_pipe(new_axis)(
+            os.path.join(self.INPUT_DIR, self.dataset))
+        with open(self.intercepted[0], 'wb') as outfile:
+            np.save(outfile, resampled)  # otherwise `.npy` is suffixed
