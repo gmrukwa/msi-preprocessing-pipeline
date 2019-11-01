@@ -18,7 +18,7 @@ import sys
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, report_value, take
-from components.io_utils import subdirectories, text_files
+from components.io_utils import subdirectories, text_files, try_loadtxt
 from components.spectrum.resampling import estimate_new_axis
 
 
@@ -34,7 +34,8 @@ def get_mzs_from_content(content: np.ndarray) -> np.ndarray:
 get_mz_axis = pipe(
     text_files,
     partial(take, n_elements=1),
-    as_arguments_of(np.loadtxt),
+    as_arguments_of(try_loadtxt),
+    report_value('loaded_data'),
     get_mzs_from_content
 )
 

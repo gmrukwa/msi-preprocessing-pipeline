@@ -2,6 +2,8 @@ import os
 from functools import partial
 
 from functional import pipe
+import numpy as np
+import pandas as pd
 
 
 def rooted_content(root: str):
@@ -18,3 +20,11 @@ def has_extension(path, extension: str='.txt'):
 
 is_text = partial(has_extension, extension='.txt')
 text_files = pipe(files, partial(filter, is_text))
+
+
+def try_loadtxt(fname: str):
+    try:
+        return np.loadtxt(fname)
+    except ValueError:
+        return pd.read_csv(fname, delimiter=' ', header=None,
+                           decimal=',').values
