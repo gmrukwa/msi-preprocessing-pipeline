@@ -76,7 +76,7 @@ class NonAtomicTask(BaseTask, metaclass=ABCMeta):
     def run(self):
         self._run()  # run with intercepted output directories
         
-        for src, dst in zip(self.intercepted, self._output):
+        for src, dst in zip(self.intercepted, self._rooted_output):
             shutil.move(src, dst)
 
 
