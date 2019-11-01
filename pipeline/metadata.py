@@ -8,20 +8,16 @@ import pandas as pd
 from pipeline._base import *
 
 
-class AssembleMetadata(AtomicTask):
-    INPUT_DIR = os.path.join(AtomicTask.INPUT_DIR, 'raw')
+class AssembleMetadata(BaseTask):
+    INPUT_DIR = os.path.join(BaseTask.INPUT_DIR, 'raw')
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, 'metadata')
 
     dataset = luigi.Parameter(description='Dataset to get metadata from')
 
-    def requires(self):
-        return MakeDir(self.OUTPUT_DIR)
+    def output(self):
+        return self._as_target("{0}.csv".format(self.dataset))
 
-    @property
-    def _output(self):
-        return ["{0}.csv".format(self.dataset)]
-
-    def _run(self):
+    def run(self):
         from components.io_utils import text_files
         from bin.assemble_metadata import (
             spectrum_metadata,
@@ -42,4 +38,5 @@ class AssembleMetadata(AtomicTask):
         )
         data_path = os.path.join(self.INPUT_DIR, self.dataset)
         metadata = gather_metadata(data_path)
-        save_csv(metadata, self._rooted_output[0])
+        with self.output().open('w') as outfile:
+            save_csv(metadata, outfile)

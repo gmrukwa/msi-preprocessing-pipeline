@@ -7,32 +7,34 @@ from pipeline._base import *
 from pipeline.resampling import FindResamplingAxis, ResampleDataset
 
 
-class RemoveBaseline(NonAtomicTask):
+class RemoveBaseline(BaseTask):
     INPUT_DIR = ResampleDataset.OUTPUT_DIR
-    OUTPUT_DIR = os.path.join(NonAtomicTask.OUTPUT_DIR, 'baseline-removed')
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, 'baseline-removed')
 
     dataset = luigi.Parameter(description="Dataset to remove baseline from")
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield MakeDir(self.OUTPUT_DIR)
         yield FindResamplingAxis(datasets=self.datasets)
         yield ResampleDataset(dataset=self.dataset, datasets=self.datasets)
     
-    @property
-    def _output(self):
-        return ["{0}.npy".format(self.dataset)]
+    def output(self):
+        return self._as_target("{0}.npy".format(self.dataset))
 
-    def _run(self):
+    def run(self):
         from bin.remove_baseline import baseline_remover
-        with self.input()[1][0].open('r') as infile:
+        with self.input()[0].open('r') as infile:
             mz_axis = np.loadtxt(infile)
         remover = baseline_remover(mz_axis)
-        with self.input()[2][0].open('rb') as infile:
+        with self.input()[1].open('rb') as infile:
             spectra = np.load(infile)
         lowered = pmap(remover,
                        tqdm(LuigiTqdm(spectra, self),
                             desc='Baseline removal'),
                        chunksize=800)
-        with open(self.intercepted[0], 'wb') as outfile:
-            np.save(outfile, lowered)
+        with self.output().temporary_path() as tmp_path:
+            with open(tmp_path, 'wb') as outfile:
+                np.save(outfile, lowered)
+
+if __name__ == '__main__':
+    luigi.build([RemoveBaseline()], local_scheduler=True)
