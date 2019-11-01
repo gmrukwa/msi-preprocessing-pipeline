@@ -83,10 +83,12 @@ class NonAtomicTask(BaseTask, metaclass=ABCMeta):
             shutil.move(src, dst)
 
 
-class MakeIntermediateDir(AtomicTask):
+class MakeDir(AtomicTask):
+    directory = luigi.Parameter()
+
     @property
     def _output(self):
-        return [self.OUTPUT_DIR]
+        return [self.directory]
     
     def _run(self):
-        os.makedirs(self.OUTPUT_DIR, exist_ok=True)
+        os.makedirs(self.directory, exist_ok=True)

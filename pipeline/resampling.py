@@ -3,7 +3,7 @@ import os
 import luigi
 import numpy as np
 
-from pipeline._base import AtomicTask, MakeIntermediateDir, NonAtomicTask
+from pipeline._base import AtomicTask, MakeDir, NonAtomicTask
 
 
 class FindResamplingAxis(AtomicTask):
@@ -12,7 +12,7 @@ class FindResamplingAxis(AtomicTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return MakeIntermediateDir()
+        return MakeDir(self.OUTPUT_DIR)
 
     @property
     def _output(self):
