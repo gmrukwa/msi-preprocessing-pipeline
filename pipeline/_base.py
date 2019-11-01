@@ -74,9 +74,6 @@ class NonAtomicTask(BaseTask, metaclass=ABCMeta):
         pass
 
     def run(self):
-        for path in self.intercepted:
-            os.makedirs(path)
-        
         self._run()  # run with intercepted output directories
         
         for src, dst in zip(self.intercepted, self._output):
