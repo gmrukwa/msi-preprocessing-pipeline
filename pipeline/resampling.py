@@ -21,9 +21,9 @@ class FindResamplingAxis(HelperTask):
             os.path.join(self.INPUT_DIR, dataset)
             for dataset in self.datasets
         ]
-        new_axis = build_new_axis(datasets)
+        new_axis = build_new_axis(datasets).reshape(1, -1)
         with self.output().open('w') as outfile:
-            np.savetxt(outfile, new_axis)
+            np.savetxt(outfile, new_axis, delimiter=',')
 
 
 class ResampleDataset(BaseTask):
@@ -45,7 +45,7 @@ class ResampleDataset(BaseTask):
         from components.io_utils import text_files
 
         with self.input().open() as axis_file:
-            new_axis = np.loadtxt(axis_file)
+            new_axis = np.loadtxt(axis_file, delimiter=',')
 
         dataset_sampling_pipe = pipe(
             text_files, list,
