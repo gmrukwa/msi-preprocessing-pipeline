@@ -1,9 +1,10 @@
+from functools import partial
 import os
 
 import luigi
 import numpy as np
 
-from pipeline._base import AtomicTask, MakeDir, NonAtomicTask
+from pipeline._base import AtomicTask, LuigiTqdm, MakeDir, NonAtomicTask
 
 
 class FindResamplingAxis(AtomicTask):
@@ -45,11 +46,23 @@ class ResampleDataset(NonAtomicTask):
         return ["{0}.npy".format(self.dataset)]
     
     def _run(self):
-        from bin.resample_datasets import dataset_sampling_pipe
+        from bin.resample_datasets import spectrum_sampling_pipe
+        from functional import for_each, pipe, progress_bar
+        from components.io_utils import text_files
+
         axis_path = os.path.join(AtomicTask.OUTPUT_DIR,
                                  'resampled_mz_axis.txt')
         new_axis = np.loadtxt(axis_path)
-        resampled = dataset_sampling_pipe(new_axis)(
+
+        dataset_sampling_pipe = pipe(
+            text_files, list,
+            partial(LuigiTqdm, task=self),
+            progress_bar('resampling dataset'),
+            for_each(spectrum_sampling_pipe(new_axis),
+                     parallel=True, chunksize=800)
+        )
+
+        resampled = dataset_sampling_pipe(
             os.path.join(self.INPUT_DIR, self.dataset))
         with open(self.intercepted[0], 'wb') as outfile:
             np.save(outfile, resampled)  # otherwise `.npy` is suffixed
