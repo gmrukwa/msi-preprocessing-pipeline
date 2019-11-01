@@ -4,7 +4,7 @@ import os
 import luigi
 import numpy as np
 
-from pipeline._base import AtomicTask, LuigiTqdm, MakeDir, NonAtomicTask
+from pipeline._base import *
 
 
 class FindResamplingAxis(AtomicTask):
@@ -37,9 +37,11 @@ class ResampleDataset(NonAtomicTask):
     OUTPUT_DIR = os.path.join(NonAtomicTask.OUTPUT_DIR, 'resampled')
 
     dataset = luigi.Parameter(description="Dataset to resample")
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return MakeDir(self.OUTPUT_DIR), FindResamplingAxis()
+        yield MakeDir(self.OUTPUT_DIR)
+        yield FindResamplingAxis(datasets=self.datasets)
     
     @property
     def _output(self):
