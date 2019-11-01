@@ -9,7 +9,7 @@ from pipeline.resampling import FindResamplingAxis, ResampleDataset
 
 class RemoveBaseline(BaseTask):
     INPUT_DIR = ResampleDataset.OUTPUT_DIR
-    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, 'baseline-removed')
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '02-baseline-removed')
 
     dataset = luigi.Parameter(description="Dataset to remove baseline from")
     datasets = luigi.ListParameter(description="Names of the datasets to use")

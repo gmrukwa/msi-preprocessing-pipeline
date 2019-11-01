@@ -28,7 +28,7 @@ class FindResamplingAxis(HelperTask):
 
 class ResampleDataset(BaseTask):
     INPUT_DIR = os.path.join(BaseTask.INPUT_DIR, 'raw')
-    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, 'resampled')
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '01-resampled')
 
     dataset = luigi.Parameter(description="Dataset to resample")
     datasets = luigi.ListParameter(description="Names of the datasets to use")
