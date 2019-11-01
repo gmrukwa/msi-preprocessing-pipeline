@@ -1,3 +1,12 @@
 {
-    "python.pythonPath": "~/miniconda3/envs/luigi/bin/python"
+    "python.pythonPath": "/usr/local/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintPath": "/opt/conda/bin/pylint",
+    "python.testing.unittestArgs": [
+        "discover"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": false,
 }

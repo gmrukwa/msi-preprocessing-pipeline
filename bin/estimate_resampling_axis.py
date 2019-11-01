@@ -12,12 +12,13 @@ Find new common m/z axis. Path to datasets root is the parameter to the script.
 """
 
 from functools import partial, reduce
+import os
 import sys
 
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, report_value, take
-from components.io_utils import subdirectories, text_files
+from components.io_utils import subdirectories, text_files, try_loadtxt
 from components.spectrum.resampling import estimate_new_axis
 
 
@@ -33,7 +34,8 @@ def get_mzs_from_content(content: np.ndarray) -> np.ndarray:
 get_mz_axis = pipe(
     text_files,
     partial(take, n_elements=1),
-    as_arguments_of(np.loadtxt),
+    as_arguments_of(try_loadtxt),
+    report_value('loaded_data'),
     get_mzs_from_content
 )
 
@@ -93,7 +95,6 @@ get_some_axis = pipe(
 
 
 build_new_axis = pipe(
-    datasets,
     broadcast(
         get_some_axis,
         smallest_number_of_samples,
@@ -109,8 +110,8 @@ build_new_axis = pipe(
 
 
 def main():
-    new_axis = build_new_axis(sys.argv[1])
-    np.savetxt('new_mz_axis.txt', new_axis)
+    new_axis = build_new_axis(datasets(sys.argv[1]))
+    np.savetxt(os.path.join(sys.argv[2], 'new_mz_axis.txt'), new_axis)
 
 
 if __name__ == '__main__':
