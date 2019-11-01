@@ -89,3 +89,23 @@ class MakeDir(AtomicTask):
     
     def _run(self):
         os.makedirs(self.directory, exist_ok=True)
+
+
+class LuigiTqdm:
+    def __init__(self, col, task: luigi.Task):
+        self.col = col
+        self.task = task
+    
+    def __iter__(self):
+        self.task.set_status_message('in progress')
+        min_increment = len(self.col) // 100 or 1
+        for idx, item in enumerate(self.col):
+            yield item
+            if idx % min_increment == 0:
+                percentage = (100 * idx) // len(self.col)
+                self.task.set_progress_percentage(percentage)
+        self.task.set_progress_percentage(100)
+        self.task.set_status_message('finished')
+
+    def __len__(self):
+        return len(self.col)
