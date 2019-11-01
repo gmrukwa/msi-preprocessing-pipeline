@@ -94,7 +94,6 @@ get_some_axis = pipe(
 
 
 build_new_axis = pipe(
-    datasets,
     broadcast(
         get_some_axis,
         smallest_number_of_samples,
@@ -110,7 +109,7 @@ build_new_axis = pipe(
 
 
 def main():
-    new_axis = build_new_axis(sys.argv[1])
+    new_axis = build_new_axis(datasets(sys.argv[1]))
     np.savetxt(os.path.join(sys.argv[2], 'new_mz_axis.txt'), new_axis)
 
 
