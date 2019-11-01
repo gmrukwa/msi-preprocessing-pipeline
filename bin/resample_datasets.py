@@ -19,12 +19,12 @@ import sys
 import numpy as np
 
 from functional import as_arguments_of, broadcast, for_each, pipe, progress_bar
-from components.io_utils import text_files
+from components.io_utils import text_files, try_loadtxt
 
 
 def spectrum_sampling_pipe(mzs):
     return pipe(
-        np.loadtxt,
+        try_loadtxt,
         np.transpose,
         as_arguments_of(partial(np.interp, mzs)),
         np.ravel,
