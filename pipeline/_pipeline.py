@@ -1,7 +1,7 @@
 import luigi
 
 from pipeline.metadata import AssembleMetadata
-from pipeline.baseline import RemoveBaseline
+from pipeline.outlier import DetectOutliers
 
 
 class PreprocessingPipeline(luigi.Task):
@@ -10,5 +10,4 @@ class PreprocessingPipeline(luigi.Task):
     def requires(self):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
-        for dataset in self.datasets:
-            yield RemoveBaseline(dataset=dataset, datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets)
