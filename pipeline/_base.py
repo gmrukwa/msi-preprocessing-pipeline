@@ -74,9 +74,6 @@ class NonAtomicTask(BaseTask, metaclass=ABCMeta):
         pass
 
     def run(self):
-        if all(o.exists() for o in self.output()):  # idempotency
-            return
-        
         for path in self.intercepted:
             os.makedirs(path)
         
