@@ -1,7 +1,7 @@
 import luigi
 
+from pipeline.alignment import PaFFT
 from pipeline.metadata import AssembleMetadata
-from pipeline.outlier import DetectOutliers
 
 
 class PreprocessingPipeline(luigi.Task):
@@ -10,4 +10,5 @@ class PreprocessingPipeline(luigi.Task):
     def requires(self):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
-        yield DetectOutliers(datasets=self.datasets)
+        for dataset in self.datasets:
+            yield PaFFT(dataset=dataset, datasets=self.datasets)
