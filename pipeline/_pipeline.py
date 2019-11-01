@@ -1,7 +1,7 @@
 import luigi
 
 from pipeline.metadata import AssembleMetadata
-from pipeline.resampling import ResampleDataset
+from pipeline.baseline import RemoveBaseline
 
 
 class PreprocessingPipeline(luigi.Task):
@@ -11,4 +11,4 @@ class PreprocessingPipeline(luigi.Task):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
         for dataset in self.datasets:
-            yield ResampleDataset(dataset=dataset, datasets=self.datasets)
+            yield RemoveBaseline(dataset=dataset, datasets=self.datasets)
