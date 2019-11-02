@@ -1,7 +1,7 @@
 import luigi
 
+from pipeline.gmm import BuildGMM
 from pipeline.metadata import AssembleMetadata
-from pipeline.resampling import ResampleDataset
 
 
 class PreprocessingPipeline(luigi.Task):
@@ -10,5 +10,5 @@ class PreprocessingPipeline(luigi.Task):
     def requires(self):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
-        for dataset in self.datasets:
-            yield ResampleDataset(dataset=dataset, datasets=self.datasets)
+        yield BuildGMM(datasets=self.datasets)
+        

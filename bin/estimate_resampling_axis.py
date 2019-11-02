@@ -35,7 +35,6 @@ get_mz_axis = pipe(
     text_files,
     partial(take, n_elements=1),
     as_arguments_of(try_loadtxt),
-    report_value('loaded_data'),
     get_mzs_from_content
 )
 
