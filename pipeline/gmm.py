@@ -44,7 +44,7 @@ class ExtractGMMReference(HelperTask):
 resample = np.interp
 
 
-EMPIRICAL_OPTIMAL_CHANNELS_NUMBER = 1000
+EMPIRICAL_OPTIMAL_CHANNELS_NUMBER = 100000
 
 
 class ResampleGMMReference(HelperTask):
