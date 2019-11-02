@@ -9,6 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from components.spectrum.resampling import estimate_new_axis
+from components.matlab_legacy import estimate_gmm
 from pipeline._base import *
 from pipeline.normalize import NormalizeTIC
 from pipeline.outlier import DetectOutliers
@@ -83,35 +84,6 @@ class ResampleGMMReference(HelperTask):
             np.savetxt(tmp_path, resampled.reshape(1, -1), delimiter=',')
 
 
-_MATLAB_SEARCH_PATHS = \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/runtime/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/bin/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/sys/os/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/sys/opengl/lib/glnxa64:"
-
-
-_local_system = platform.system()
-
-if _local_system == 'Windows':
-    # Must be here. Doesn't work as contextmanager.
-    # If you think different increase counter of wasted hours: 4
-    os.environ['PATH'] = os.environ['PATH'].lower()
-
-
-@contextmanager
-def _matlab_paths():
-    if _local_system == 'Linux':
-        old_env = os.environ.get('LD_LIBRARY_PATH', '')
-        os.environ['LD_LIBRARY_PATH'] = _MATLAB_SEARCH_PATHS + old_env
-    elif _local_system == 'Darwin':
-        raise NotImplementedError('OSX hosts are not supported.')
-    try:
-        yield
-    finally:
-        if _local_system == 'Linux':
-            os.environ['LD_LIBRARY_PATH'] = old_env
-
-
 class BuildGMM(HelperTask):
     INPUT_DIR = HelperTask.INPUT_DIR
 
@@ -133,38 +105,7 @@ class BuildGMM(HelperTask):
         spectrum = np.loadtxt(spectrum.path, delimiter=',')
         mzs = np.loadtxt(mzs.path, delimiter=',')
         
-        with _matlab_paths():
-            import MatlabAlgorithms.MsiAlgorithms as msi
-            import matlab
-
-            def as_matlab_type(array):
-                return matlab.double([list(map(float, array.ravel()))])
-
-            self.set_status_message('MCR initialization')
-            logger.info('MCR initialization')
-            engine = msi.initialize()
-            
-            spectrum = as_matlab_type(spectrum)
-            mzs = as_matlab_type(mzs)
-            
-            self.set_status_message('Model construction')
-            logger.info('Model construction')
-            model = engine.estimate_gmm(mzs, spectrum, nargout=1)
-            mu = np.array(model['mu'], dtype=float).ravel()
-            sig = np.array(model['sig'], dtype=float).ravel()
-            w = np.array(model['w'], dtype=float).ravel()
-            model = {
-                    'mu': list(mu),
-                    'sig': list(sig),
-                    'w': list(w),
-                    'KS': int(model['KS']),
-                    'meanspec': list(np.array(model['meanspec'],
-                                    dtype=float).ravel())
-            }
-
-            # The line below fails due to unknown reasons, but MathWorks
-            # won't fix it anyway.
-            # engine.close()
+        mu, sig, w, model = estimate_gmm(mzs, spectrum)
 
         logger.info('Found {0} GMM components'.format(mu.size))
 
