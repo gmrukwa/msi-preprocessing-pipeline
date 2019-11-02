@@ -11,7 +11,7 @@ from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
 
 
-class ExtractReference(HelperTask):
+class ExtractPaFFTReference(HelperTask):
     INPUT_DIR = RemoveBaseline.INPUT_DIR
 
     datasets = luigi.ListParameter(description="Names of the datasets to use")
@@ -46,7 +46,7 @@ class PaFFT(BaseTask):
 
     def requires(self):
         yield FindResamplingAxis(datasets=self.datasets)
-        yield ExtractReference(datasets=self.datasets)
+        yield ExtractPaFFTReference(datasets=self.datasets)
         yield RemoveBaseline(dataset=self.dataset, datasets=self.datasets)
 
     def output(self):
