@@ -1,6 +1,6 @@
 import luigi
 
-from pipeline.alignment import PaFFT
+from pipeline.normalize import NormalizeTIC
 from pipeline.metadata import AssembleMetadata
 
 
@@ -11,4 +11,4 @@ class PreprocessingPipeline(luigi.Task):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
         for dataset in self.datasets:
-            yield PaFFT(dataset=dataset, datasets=self.datasets)
+            yield NormalizeTIC(dataset=dataset, datasets=self.datasets)
