@@ -6,10 +6,12 @@ import platform
 from functional import pmap
 import luigi
 import numpy as np
+from scipy.stats import norm
 from tqdm import tqdm
 
 from components.spectrum.resampling import estimate_new_axis
-from components.matlab_legacy import estimate_gmm
+from components.matlab_legacy import estimate_gmm, find_thresholds
+from components.stats import matlab_alike_quantile
 from pipeline._base import *
 from pipeline.normalize import NormalizeTIC
 from pipeline.outlier import DetectOutliers
@@ -118,3 +120,51 @@ class BuildGMM(HelperTask):
         with gmm_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'w') as out_file:
             json.dump(model, out_file, indent=2, sort_keys=True)
+
+
+class FilterComponents(HelperTask):
+    INPUT_DIR = HelperTask.INPUT_DIR
+
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        return BuildGMM(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('gmm_var_selection.csv')
+        yield self._as_target('gmm_amp_selection.csv')
+        yield self._as_target('gmm_final_selection.csv')
+
+    def run(self):
+        mu, sig, w, _ = self.input()
+        mu = np.loadtxt(mu.path, delimiter=',')
+        sig = np.loadtxt(sig.path, delimiter=',')
+        w = np.loadtxt(w.path, delimiter=',')
+        var_out, amp_out, final_out = self.output()
+
+        var = sig ** 2
+        var_99th_perc = matlab_alike_quantile(var, 0.99)
+        var_inlier = var[var < var_99th_perc]
+        var_thresholds = find_thresholds(var_inlier)
+        var_selection = var < var_thresholds[-1]
+        with var_out.temporary_path() as tmp_path:
+            np.savetxt(tmp_path, var_selection.reshape(1, -1), delimiter=',')
+
+        amp = np.array([
+            # it doesn't matter where the actual mu is, we need max
+            w_ * norm.pdf(0, 0, sig_) for w_, sig_
+            in zip(w[var_selection], sig[var_selection])
+        ])
+        amp_inv = 1. / amp
+        amp_inv_99th_perc = matlab_alike_quantile(amp_inv, 0.95)
+        amp_inv_inlier = amp_inv[amp_inv < amp_inv_99th_perc]
+        amp_inv_thresholds = find_thresholds(amp_inv_inlier)
+        GAMRED_FILTER = 2
+        amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
+        with amp_out.temporary_path() as tmp_path:
+            np.savetxt(tmp_path, amp_selection.reshape(1, -1), delimiter=',')
+        
+        final_selection = var_selection.copy()
+        final_selection[final_selection] = amp_selection
+        with final_out.temporary_path() as tmp_path:
+            np.savetxt(tmp_path, final_selection.reshape(1, -1), delimiter=',')

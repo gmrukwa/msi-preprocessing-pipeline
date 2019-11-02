@@ -1,6 +1,6 @@
 import luigi
 
-from pipeline.gmm import BuildGMM
+from pipeline.gmm import FilterComponents
 from pipeline.metadata import AssembleMetadata
 
 
@@ -10,5 +10,5 @@ class PreprocessingPipeline(luigi.Task):
     def requires(self):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
-        yield BuildGMM(datasets=self.datasets)
+        yield FilterComponents(datasets=self.datasets)
         
