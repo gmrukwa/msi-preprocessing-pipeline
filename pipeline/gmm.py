@@ -166,6 +166,8 @@ class BuildGMM(HelperTask):
             # won't fix it anyway.
             # engine.close()
 
+        logger.info('Found {0} GMM components'.format(mu.size))
+
         with mu_dst.temporary_path() as tmp_path:
             np.savetxt(tmp_path, mu, delimiter=',')
         with sig_dst.temporary_path() as tmp_path:
