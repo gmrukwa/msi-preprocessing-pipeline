@@ -282,4 +282,4 @@ class MergeDataset(BaseTask):
             save_csv_tmp(mz_dst, mu)
         with spectra_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
-            np.save(out_file, spectra)
+            np.save(out_file, merged)
