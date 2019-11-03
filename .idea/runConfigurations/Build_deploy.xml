@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Build deploy" type="docker-deploy" factoryName="dockerfile" server-name="Docker (local)">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="buildCliOptions" value="" />
+        <option name="buildOnly" value="true" />
+        <option name="command" value="" />
+        <option name="containerName" value="" />
+        <option name="contextFolderPath" value="." />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="msi-preprocessing:deploy" />
+        <option name="publishAllPorts" value="true" />
+        <option name="commandLineOptions" value="" />
+        <option name="sourceFilePath" value="docker/deploy.dockerfile" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
