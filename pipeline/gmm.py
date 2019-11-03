@@ -10,6 +10,7 @@ from scipy.stats import norm
 from tqdm import tqdm
 
 from bin.convolve import convolve
+import components.spectrum.model as mdl
 from components.spectrum.resampling import estimate_new_axis
 from components.matlab_legacy import estimate_gmm, find_thresholds
 from components.stats import matlab_alike_quantile
@@ -205,3 +206,36 @@ class Convolve(BaseTask):
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, convolved)
+
+
+class MergeComponents(HelperTask):
+    INPUT_DIR = HelperTask.OUTPUT_DIR
+
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        return FilterComponents(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('merged_start_indices.csv')
+        yield self._as_target('merged_lengths.csv')
+        yield self._as_target('merged_mu.csv')
+        yield self._as_target('merged_sig.csv')
+        yield self._as_target('merged_w.csv')
+    
+    def run(self):
+        *_, mu, sig, w = self.input()
+        mu = load_csv(mu.path).ravel()
+        sig = load_csv(sig.path).ravel()
+        w = load_csv(w.path).ravel()
+
+        merged = mdl.merge(mdl.Components(mu, sig, w))
+        logger.info(
+            "{0} merged components".format(merged.matches.indices.size))
+        
+        indices, lengths, mu_dst, sig_dst, w_dst = self.output()
+        save_csv_tmp(indices, merged.matches.indices, fmt='%i')
+        save_csv_tmp(lengths, merged.matches.lengths, fmt='%i')
+        save_csv_tmp(mu_dst, merged.new_components.means)
+        save_csv_tmp(sig_dst, merged.new_components.sigmas)
+        save_csv_tmp(w_dst, merged.new_components.weights)
