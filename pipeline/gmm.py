@@ -230,8 +230,9 @@ class MergeComponents(HelperTask):
         w = load_csv(w.path).ravel()
 
         merged = mdl.merge(mdl.Components(mu, sig, w))
-        logger.info(
-            "{0} merged components".format(merged.matches.indices.size))
+        msg = "{0} merged components".format(merged.matches.indices.size)
+        logger.info(msg)
+        self.set_status_message(msg)
         
         indices, lengths, mu_dst, sig_dst, w_dst = self.output()
         save_csv_tmp(indices, merged.matches.indices, fmt='%i')
@@ -239,3 +240,39 @@ class MergeComponents(HelperTask):
         save_csv_tmp(mu_dst, merged.new_components.means)
         save_csv_tmp(sig_dst, merged.new_components.sigmas)
         save_csv_tmp(w_dst, merged.new_components.weights)
+
+
+class MergeDataset(BaseTask):
+    INPUT_DIR = Convolve.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '07-gmm-merged')
+
+    dataset = luigi.Parameter(description="Dataset to convolve")
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        yield Convolve(dataset=self.dataset, datasets=self.datasets)
+        yield MergeComponents(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('{0}.npy'.format(self.dataset))
+        yield self._as_target('mz.csv')
+    
+    def run(self):
+        spectra, components = self.input()
+        indices, lengths, mu, *_ = components
+        indices = load_csv(indices.path, dtype=int)
+        lengths = load_csv(lengths.path, dtype=int)
+        mu = load_csv(mu.path).reshape(1, -1)
+        self.set_status_message('Data loading')
+        spectra = np.load(spectra.path)
+
+        self.set_status_message('Merging components')
+        merged = mdl.apply_merging(spectra, mdl.Matches(indices, lengths))
+
+        self.set_status_message('Saving results')
+        spectra_dst, mz_dst = self.output()
+        if not mz_dst.exists():
+            save_csv_tmp(mz_dst, mu)
+        with spectra_dst.temporary_path() as tmp_path, \
+                open(tmp_path, 'wb') as out_file:
+            np.save(out_file, spectra)

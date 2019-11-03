@@ -1,6 +1,6 @@
 import luigi
 
-from pipeline.gmm import Convolve, MergeComponents
+from pipeline.gmm import MergeDataset
 from pipeline.metadata import AssembleMetadata
 
 
@@ -11,5 +11,4 @@ class PreprocessingPipeline(luigi.Task):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
         for dataset in self.datasets:
-            yield Convolve(dataset=dataset, datasets=self.datasets)
-        yield MergeComponents(datasets=self.datasets)
+            yield MergeDataset(dataset=dataset, datasets=self.datasets)
