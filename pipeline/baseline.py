@@ -1,9 +1,12 @@
+from functools import partial
 import os
 
 from functional import pmap
 import luigi
 import numpy as np
 from tqdm import tqdm
+
+from components.spectrum.baseline import adaptive_remove
 
 from pipeline._base import *
 from pipeline.resampling import FindResamplingAxis, ResampleDataset
@@ -24,11 +27,10 @@ class RemoveBaseline(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
 
     def run(self):
-        from bin.remove_baseline import baseline_remover
         self.set_status_message('Loading data')
         mz_axis, spectra = self.input()
         mz_axis = np.loadtxt(mz_axis.path, delimiter=',')
-        remover = baseline_remover(mz_axis)
+        remover = partial(adaptive_remove, mz_axis)
         spectra = np.load(spectra.path)
         self.set_status_message('Removing baseline')
         lowered = pmap(remover,
@@ -39,7 +41,3 @@ class RemoveBaseline(BaseTask):
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, lowered)
-
-
-if __name__ == '__main__':
-    luigi.build([RemoveBaseline()], local_scheduler=True)
