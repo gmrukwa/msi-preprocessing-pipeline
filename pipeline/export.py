@@ -1,3 +1,5 @@
+import os
+
 import luigi
 import numpy as np
 
@@ -7,6 +9,7 @@ from pipeline.gmm import MergeDataset
 
 class ExportCsv(BaseTask):
     INPUT_DIR = MergeDataset.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '08-exported')
 
     dataset = luigi.Parameter(description="Dataset to export")
     datasets = luigi.ListParameter(
