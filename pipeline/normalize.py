@@ -35,7 +35,9 @@ class NormalizeTIC(BaseTask):
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '05-tic-normalized')
 
     dataset = luigi.Parameter(description="Dataset to normalize")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
         yield ExtractTICReference(datasets=self.datasets)

@@ -116,7 +116,9 @@ class ResampleDataset(BaseTask):
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '01-resampled')
 
     dataset = luigi.Parameter(description="Dataset to resample")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
         return FindResamplingAxis(datasets=self.datasets)

@@ -17,7 +17,9 @@ class RemoveBaseline(BaseTask):
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '02-baseline-removed')
 
     dataset = luigi.Parameter(description="Dataset to remove baseline from")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
         yield FindResamplingAxis(datasets=self.datasets)
