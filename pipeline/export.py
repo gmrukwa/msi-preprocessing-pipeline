@@ -9,7 +9,9 @@ class ExportCsv(BaseTask):
     INPUT_DIR = MergeDataset.OUTPUT_DIR
 
     dataset = luigi.Parameter(description="Dataset to export")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     fmt = luigi.Parameter(description="Format of numbers during export",
                           default='%.18e')
     
