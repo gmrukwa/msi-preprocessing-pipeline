@@ -85,6 +85,9 @@ spectra will be lost.
 
 Both `.` and `,` are supported as decimal separator.
 
+Example of the expected structure can be found in
+[`sample-data`](./sample-data).
+
 ### Launch
 
 You can launch preprocessing via:
@@ -106,6 +109,14 @@ docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset
 
 **Note:** The `--export-csv` switch must appear last (due to the way
 Docker handles arguments).
+
+#### Launch Sample
+
+1) Download `sample-data` directory
+2) Run `docker run -v sample-data:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'`
+3) Track progress at [`localhost:8082`](https://localhost:8082)
+
+Building GMM model takes longer time (at least 1 hour), so be patient.
 
 ## Advanced
 
