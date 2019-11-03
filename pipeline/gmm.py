@@ -18,6 +18,10 @@ from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
 
 
+save_csv = partial(np.savetxt, delimiter=',')
+load_csv = partial(np.loadtxt, delimiter=',')
+
+
 class ExtractGMMReference(HelperTask):
     INPUT_DIR = NormalizeTIC.OUTPUT_DIR
 
@@ -41,7 +45,7 @@ class ExtractGMMReference(HelperTask):
         counts = [np.sum(approval) for approval in approvals]
         mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
         with self.output().temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mean, delimiter=',')
+            save_csv(tmp_path, mean)
 
 
 resample = np.interp
@@ -67,8 +71,8 @@ class ResampleGMMReference(HelperTask):
         old_mzs, old_reference = self.input()
         reference_dst, new_mzs_dst = self.output()
 
-        old_mzs = np.loadtxt(old_mzs.path, delimiter=',')
-        old_reference = np.loadtxt(old_reference.path, delimiter=',')
+        old_mzs = load_csv(old_mzs.path)
+        old_reference = load_csv(old_reference.path)
 
         limits = np.min(old_mzs), np.max(old_mzs)
         new_mzs = estimate_new_axis(
@@ -78,12 +82,12 @@ class ResampleGMMReference(HelperTask):
         )
 
         with new_mzs_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, new_mzs.reshape(1, -1), delimiter=',')
+            save_csv(tmp_path, new_mzs.reshape(1, -1))
         
         resampled = resample(new_mzs, old_mzs, old_reference)
 
         with reference_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, resampled.reshape(1, -1), delimiter=',')
+            save_csv(tmp_path, resampled.reshape(1, -1))
 
 
 class BuildGMM(HelperTask):
@@ -104,19 +108,19 @@ class BuildGMM(HelperTask):
         spectrum, mzs = self.input()
         mu_dst, sig_dst, w_dst, gmm_dst = self.output()
         
-        spectrum = np.loadtxt(spectrum.path, delimiter=',')
-        mzs = np.loadtxt(mzs.path, delimiter=',')
+        spectrum = load_csv(spectrum.path)
+        mzs = load_csv(mzs.path)
         
         mu, sig, w, model = estimate_gmm(mzs, spectrum)
 
         logger.info('Found {0} GMM components'.format(mu.size))
 
         with mu_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mu, delimiter=',')
+            save_csv(tmp_path, mu)
         with sig_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, sig, delimiter=',')
+            save_csv(tmp_path, sig)
         with w_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, w, delimiter=',')
+            save_csv(tmp_path, w)
         with gmm_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'w') as out_file:
             json.dump(model, out_file, indent=2, sort_keys=True)
