@@ -1,6 +1,6 @@
 import luigi
 
-from pipeline.gmm import FilterComponents
+from pipeline.gmm import Convolve
 from pipeline.metadata import AssembleMetadata
 
 
@@ -10,5 +10,6 @@ class PreprocessingPipeline(luigi.Task):
     def requires(self):
         for dataset in self.datasets:
             yield AssembleMetadata(dataset=dataset)
-        yield FilterComponents(datasets=self.datasets)
+        for dataset in self.datasets:
+            yield Convolve(dataset=dataset, datasets=self.datasets)
         

@@ -9,6 +9,7 @@ import numpy as np
 from scipy.stats import norm
 from tqdm import tqdm
 
+from bin.convolve import convolve
 from components.spectrum.resampling import estimate_new_axis
 from components.matlab_legacy import estimate_gmm, find_thresholds
 from components.stats import matlab_alike_quantile
@@ -181,3 +182,35 @@ class FilterComponents(HelperTask):
             save_csv(tmp_path, sig[final_selection].reshape(1, -1))
         with filt_w.temporary_path() as tmp_path:
             save_csv(tmp_path, w[final_selection].reshape(1, -1))
+
+
+class Convolve(BaseTask):
+    INPUT_DIR = NormalizeTIC.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '06-gmm-convolved')
+
+    dataset = luigi.Parameter(description="Dataset to convolve")
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        yield FilterComponents(datasets=self.datasets)
+        yield FindResamplingAxis(datasets=self.datasets)
+        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets)
+    
+    def output(self):
+        return self._as_target("{0}.npy".format(self.dataset))
+    
+    def run(self):
+        gmm, mzs, spectra = self.input()
+        *_, mu, sig, w = gmm
+        
+        mzs = load_csv(mzs.path).ravel()
+        mu = load_csv(mu.path).ravel()
+        sig = load_csv(sig.path).ravel()
+        w = load_csv(w.path).ravel()
+        spectra = np.load(spectra.path)
+
+        convolved = convolve(spectra, mzs, mu, sig, w)
+
+        with self.output().temporary_path() as tmp_path, \
+                open(tmp_path, 'wb') as out_file:
+            np.save(out_file, convolved)
