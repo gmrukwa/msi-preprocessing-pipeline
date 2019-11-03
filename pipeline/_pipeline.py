@@ -7,7 +7,7 @@ from pipeline.metadata import AssembleMetadata
 
 class PreprocessingPipeline(luigi.Task):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
-    export_txt = luigi.BoolParameter(
+    export_csv = luigi.BoolParameter(
         description="If specified, exports spectra as csv files",
         significant=False, visibility=luigi.parameter.ParameterVisibility.HIDDEN
     )
