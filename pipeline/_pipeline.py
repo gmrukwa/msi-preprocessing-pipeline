@@ -18,7 +18,7 @@ class PreprocessingPipeline(luigi.Task):
             yield AssembleMetadata(dataset=dataset)
         for dataset in self.datasets:
             yield MergeDataset(dataset=dataset, datasets=self.datasets)
-        if self.export_txt:
+        if self.export_csv:
             for dataset in self.datasets:
                 yield ExportCsv(dataset=dataset, datasets=self.datasets)
 
