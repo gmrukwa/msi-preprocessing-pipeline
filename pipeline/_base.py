@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import logging
 import os
-import shutil
 
 import luigi
+import numpy as np
 
 logger = logging.getLogger('luigi-interface')
 
@@ -42,3 +42,26 @@ class LuigiTqdm:
 
     def __len__(self):
         return len(self.col)
+
+
+class ExtractReference(HelperTask):
+    """Base class for extracting mean spectrum
+
+    Descends must implement ``requires``, ``output``.
+    ``requires`` is supposed to have outlier detection + data stages
+    ``output`` is supposed to point a single file destination path
+    """
+    def run(self):
+        self.set_status_message('Loading data')
+        approvals, *datasets = self.input()
+        approvals = [np.load(approval.path) for approval in approvals]
+        self.set_status_message('Computing references')
+        references = [
+            np.load(spectra.path)[selection].mean(axis=0)
+            for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
+        ]
+        counts = [np.sum(approval) for approval in approvals]
+        mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
+        self.set_status_message('Saving results')
+        with self.output().temporary_path() as tmp_path:
+            np.savetxt(tmp_path, mean, delimiter=',')

@@ -10,7 +10,7 @@ from pipeline.alignment import PaFFT
 from pipeline.outlier import DetectOutliers
 
 
-class ExtractTICReference(HelperTask):
+class ExtractTICReference(ExtractReference):
     INPUT_DIR = PaFFT.OUTPUT_DIR
 
     datasets = luigi.ListParameter(description="Names of the datasets to use")
@@ -22,21 +22,6 @@ class ExtractTICReference(HelperTask):
     
     def output(self):
         return self._as_target("tic_normalization_reference.csv")
-
-    def run(self):
-        self.set_status_message('Loading data')
-        approvals, *datasets = self.input()
-        approvals = [np.load(approval.path) for approval in approvals]
-        self.set_status_message('Computing references')
-        references = [
-            np.load(spectra.path)[selection].mean(axis=0)
-            for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
-        ]
-        counts = [np.sum(approval) for approval in approvals]
-        mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        self.set_status_message('Saving results')
-        with self.output().temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mean, delimiter=',')
 
 
 def scale_to_tic(spectrum, reference_tic):

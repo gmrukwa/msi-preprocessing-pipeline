@@ -11,7 +11,7 @@ from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
 
 
-class ExtractPaFFTReference(HelperTask):
+class ExtractPaFFTReference(ExtractReference):
     INPUT_DIR = RemoveBaseline.INPUT_DIR
 
     datasets = luigi.ListParameter(description="Names of the datasets to use")
@@ -23,18 +23,6 @@ class ExtractPaFFTReference(HelperTask):
     
     def output(self):
         return self._as_target("pafft_reference.csv")
-
-    def run(self):
-        approvals, *datasets = self.input()
-        approvals = [np.load(approval.path) for approval in approvals]
-        references = [
-            np.load(spectra.path)[selection].mean(axis=0)
-            for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
-        ]
-        counts = [np.sum(approval) for approval in approvals]
-        mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        with self.output().temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mean, delimiter=',')
 
 
 class PaFFT(BaseTask):

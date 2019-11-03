@@ -29,7 +29,7 @@ def save_csv_tmp(out: luigi.LocalTarget, X, *args, **kwargs):
         save_csv(tmp_path, X, *args, **kwargs)
 
 
-class ExtractGMMReference(HelperTask):
+class ExtractGMMReference(ExtractReference):
     INPUT_DIR = NormalizeTIC.OUTPUT_DIR
 
     datasets = luigi.ListParameter(description="Names of the datasets to use")
@@ -41,17 +41,6 @@ class ExtractGMMReference(HelperTask):
     
     def output(self):
         return self._as_target("gmm_reference.csv")
-
-    def run(self):
-        approvals, *datasets = self.input()
-        approvals = [np.load(approval.path) for approval in approvals]
-        references = [
-            np.load(spectra.path)[selection].mean(axis=0)
-            for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
-        ]
-        counts = [np.sum(approval) for approval in approvals]
-        mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        save_csv_tmp(self.output(), mean)
 
 
 resample = np.interp
