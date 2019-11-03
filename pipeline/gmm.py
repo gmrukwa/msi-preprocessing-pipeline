@@ -7,7 +7,7 @@ import numpy as np
 from scipy.stats import norm
 
 import components.spectrum.model as mdl
-from bin.convolve import convolve
+from components.convolve import convolve
 from components.matlab_legacy import estimate_gmm, find_thresholds
 from components.spectrum.resampling import estimate_new_axis
 from components.stats import matlab_alike_quantile
