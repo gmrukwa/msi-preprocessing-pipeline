@@ -67,25 +67,19 @@ def make_convolver(mzs_path, components_root):
     return partial(convolve, mzs=mzs, mus=mus, sigs=sigs, ws=ws)
 
 
-convolve_dataset = pipe(
-    input_filename,
-    np.load,
-    make_convolver(mzs_path=sys.argv[1], components_root=sys.argv[2])
-)
-
-
-convolve_and_save = pipe(
-    broadcast(result_filename, convolve_dataset),
-    as_arguments_of(np.save)
-)
-
-
-convolve_all = pipe(
-    subdirectories,
-    progress_bar('Dataset'),
-    for_each(convolve_and_save, lazy=False)
-)
-
-
 if __name__ == '__main__':
+    convolve_dataset = pipe(
+        input_filename,
+        np.load,
+        make_convolver(mzs_path=sys.argv[1], components_root=sys.argv[2])
+    )
+    convolve_and_save = pipe(
+        broadcast(result_filename, convolve_dataset),
+        as_arguments_of(np.save)
+    )
+    convolve_all = pipe(
+        subdirectories,
+        progress_bar('Dataset'),
+        for_each(convolve_and_save, lazy=False)
+    )
     convolve_all(sys.argv[3])
