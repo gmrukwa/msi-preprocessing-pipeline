@@ -181,7 +181,9 @@ class Convolve(BaseTask):
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '06-gmm-convolved')
 
     dataset = luigi.Parameter(description="Dataset to convolve")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
         yield FilterComponents(datasets=self.datasets)
@@ -251,7 +253,9 @@ class MergeDataset(BaseTask):
     OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '07-gmm-merged')
 
     dataset = luigi.Parameter(description="Dataset to convolve")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
         yield Convolve(dataset=self.dataset, datasets=self.datasets)
