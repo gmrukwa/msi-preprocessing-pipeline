@@ -26,3 +26,5 @@ EXPOSE 8082
 VOLUME /data
 
 RUN mkdir /luigi
+
+ENTRYPOINT ["./entrypoint.sh"]
