@@ -1,13 +1,86 @@
-from functools import partial
+from functools import partial, reduce
 import os
 
-from functional import as_arguments_of, for_each, pipe, progress_bar, tee
+from functional import (
+    as_arguments_of,
+    broadcast,
+    for_each,
+    pipe,
+    progress_bar,
+    report_value,
+    take,
+    tee,
+)
 import luigi
 import numpy as np
 
 from components.io_utils import text_files, try_loadtxt
+from components.spectrum.resampling import estimate_new_axis
 
 from pipeline._base import *
+
+
+def get_mzs_from_content(content: np.ndarray) -> np.ndarray:
+    return content[:, 0]
+
+
+get_mz_axis = pipe(
+    text_files,
+    partial(take, n_elements=1),
+    as_arguments_of(try_loadtxt),
+    get_mzs_from_content
+)
+
+
+mz_range = pipe(
+    report_value('dataset'),
+    get_mz_axis,
+    broadcast(np.min, np.max),
+    np.array,
+    report_value('mz range')
+)
+
+
+def common_part(first, second):
+    return max(first[0], second[0]), min(first[1], second[1])
+
+
+common_range = pipe(
+    for_each(mz_range),
+    partial(reduce, common_part)
+)
+
+
+def count_samples_in_common_range(mzs, common_mzs):
+    return np.sum(np.logical_and(common_mzs[0] <= mzs, mzs <= common_mzs[1]))
+
+
+def smallest_number_of_samples(found_datasets):
+    common_mzs = common_range(found_datasets)
+    count_mzs = partial(count_samples_in_common_range, common_mzs=common_mzs)
+    estimate = pipe(
+        for_each(pipe(get_mz_axis, count_mzs), lazy=False),
+        report_value('mzs amounts'),
+        np.min,
+        report_value('minimal number of mzs')
+    )
+    return estimate(found_datasets)
+
+
+get_some_axis = pipe(
+    partial(take, n_elements=1),
+    as_arguments_of(get_mz_axis)
+)
+
+
+build_new_axis = pipe(
+    broadcast(
+        get_some_axis,
+        smallest_number_of_samples,
+        pipe(common_range, report_value('common range'))
+    ),
+    as_arguments_of(estimate_new_axis)
+)
 
 
 class FindResamplingAxis(HelperTask):
@@ -19,7 +92,6 @@ class FindResamplingAxis(HelperTask):
         return self._as_target('resampled_mz_axis.txt')
     
     def run(self):
-        from bin.estimate_resampling_axis import build_new_axis
         datasets = [
             os.path.join(self.INPUT_DIR, dataset)
             for dataset in self.datasets
