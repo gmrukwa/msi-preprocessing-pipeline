@@ -18,3 +18,9 @@ COPY test test
 RUN python -m unittest discover
 
 RUN rm -rf test
+
+# Luigi scheduler port
+EXPOSE 8082
+
+# Data mount point
+VOLUME /data

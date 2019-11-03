@@ -22,3 +22,9 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
+
+# Luigi scheduler port
+EXPOSE 8082
+
+# Data mount point
+VOLUME /data
