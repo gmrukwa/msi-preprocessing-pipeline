@@ -6,13 +6,27 @@ import platform
 from functional import pmap
 import luigi
 import numpy as np
+from scipy.stats import norm
 from tqdm import tqdm
 
+from bin.convolve import convolve
+import components.spectrum.model as mdl
 from components.spectrum.resampling import estimate_new_axis
+from components.matlab_legacy import estimate_gmm, find_thresholds
+from components.stats import matlab_alike_quantile
 from pipeline._base import *
 from pipeline.normalize import NormalizeTIC
 from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
+
+
+save_csv = partial(np.savetxt, delimiter=',')
+load_csv = partial(np.loadtxt, delimiter=',')
+
+
+def save_csv_tmp(out: luigi.LocalTarget, X, *args, **kwargs):
+    with out.temporary_path() as tmp_path:
+        save_csv(tmp_path, X, *args, **kwargs)
 
 
 class ExtractGMMReference(HelperTask):
@@ -37,8 +51,7 @@ class ExtractGMMReference(HelperTask):
         ]
         counts = [np.sum(approval) for approval in approvals]
         mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        with self.output().temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mean, delimiter=',')
+        save_csv_tmp(self.output(), mean)
 
 
 resample = np.interp
@@ -64,8 +77,8 @@ class ResampleGMMReference(HelperTask):
         old_mzs, old_reference = self.input()
         reference_dst, new_mzs_dst = self.output()
 
-        old_mzs = np.loadtxt(old_mzs.path, delimiter=',')
-        old_reference = np.loadtxt(old_reference.path, delimiter=',')
+        old_mzs = load_csv(old_mzs.path)
+        old_reference = load_csv(old_reference.path)
 
         limits = np.min(old_mzs), np.max(old_mzs)
         new_mzs = estimate_new_axis(
@@ -73,43 +86,10 @@ class ResampleGMMReference(HelperTask):
             number_of_ticks=EMPIRICAL_OPTIMAL_CHANNELS_NUMBER,
             axis_limits=limits
         )
-
-        with new_mzs_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, new_mzs.reshape(1, -1), delimiter=',')
+        save_csv_tmp(new_mzs_dst, new_mzs.reshape(1, -1))
         
         resampled = resample(new_mzs, old_mzs, old_reference)
-
-        with reference_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, resampled.reshape(1, -1), delimiter=',')
-
-
-_MATLAB_SEARCH_PATHS = \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/runtime/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/bin/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/sys/os/glnxa64:" + \
-    "/usr/local/MATLAB/MATLAB_Runtime/v91/sys/opengl/lib/glnxa64:"
-
-
-_local_system = platform.system()
-
-if _local_system == 'Windows':
-    # Must be here. Doesn't work as contextmanager.
-    # If you think different increase counter of wasted hours: 4
-    os.environ['PATH'] = os.environ['PATH'].lower()
-
-
-@contextmanager
-def _matlab_paths():
-    if _local_system == 'Linux':
-        old_env = os.environ.get('LD_LIBRARY_PATH', '')
-        os.environ['LD_LIBRARY_PATH'] = _MATLAB_SEARCH_PATHS + old_env
-    elif _local_system == 'Darwin':
-        raise NotImplementedError('OSX hosts are not supported.')
-    try:
-        yield
-    finally:
-        if _local_system == 'Linux':
-            os.environ['LD_LIBRARY_PATH'] = old_env
+        save_csv_tmp(reference_dst, resampled.reshape(1, -1))
 
 
 class BuildGMM(HelperTask):
@@ -130,50 +110,169 @@ class BuildGMM(HelperTask):
         spectrum, mzs = self.input()
         mu_dst, sig_dst, w_dst, gmm_dst = self.output()
         
-        spectrum = np.loadtxt(spectrum.path, delimiter=',')
-        mzs = np.loadtxt(mzs.path, delimiter=',')
+        spectrum = load_csv(spectrum.path)
+        mzs = load_csv(mzs.path)
         
-        with _matlab_paths():
-            import MatlabAlgorithms.MsiAlgorithms as msi
-            import matlab
-
-            def as_matlab_type(array):
-                return matlab.double([list(map(float, array.ravel()))])
-
-            self.set_status_message('MCR initialization')
-            logger.info('MCR initialization')
-            engine = msi.initialize()
-            
-            spectrum = as_matlab_type(spectrum)
-            mzs = as_matlab_type(mzs)
-            
-            self.set_status_message('Model construction')
-            logger.info('Model construction')
-            model = engine.estimate_gmm(mzs, spectrum, nargout=1)
-            mu = np.array(model['mu'], dtype=float).ravel()
-            sig = np.array(model['sig'], dtype=float).ravel()
-            w = np.array(model['w'], dtype=float).ravel()
-            model = {
-                    'mu': list(mu),
-                    'sig': list(sig),
-                    'w': list(w),
-                    'KS': int(model['KS']),
-                    'meanspec': list(np.array(model['meanspec'],
-                                    dtype=float).ravel())
-            }
-
-            # The line below fails due to unknown reasons, but MathWorks
-            # won't fix it anyway.
-            # engine.close()
+        mu, sig, w, model = estimate_gmm(mzs, spectrum)
 
         logger.info('Found {0} GMM components'.format(mu.size))
 
-        with mu_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mu, delimiter=',')
-        with sig_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, sig, delimiter=',')
-        with w_dst.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, w, delimiter=',')
+        save_csv_tmp(mu_dst, mu)
+        save_csv_tmp(sig_dst, sig)
+        save_csv_tmp(w_dst, w)
         with gmm_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'w') as out_file:
             json.dump(model, out_file, indent=2, sort_keys=True)
+
+
+class FilterComponents(HelperTask):
+    INPUT_DIR = HelperTask.INPUT_DIR
+
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        return BuildGMM(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('gmm_var_selection.csv')
+        yield self._as_target('gmm_amp_selection.csv')
+        yield self._as_target('gmm_final_selection.csv')
+        yield self._as_target('filtered_mu.csv')
+        yield self._as_target('filtered_sig.csv')
+        yield self._as_target('filtered_w.csv')
+
+    def run(self):
+        mu, sig, w, _ = self.input()
+        mu = load_csv(mu.path)
+        sig = load_csv(sig.path)
+        w = load_csv(w.path, delimiter=',')
+        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w = self.output()
+
+        var = sig ** 2
+        var_99th_perc = matlab_alike_quantile(var, 0.99)
+        var_inlier = var[var < var_99th_perc]
+        var_thresholds = find_thresholds(var_inlier)
+        var_selection = var < var_thresholds[-1]
+        save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
+
+        amp = np.array([
+            # it doesn't matter where the actual mu is, we need max
+            w_ * norm.pdf(0, 0, sig_) for w_, sig_
+            in zip(w[var_selection], sig[var_selection])
+        ])
+        amp_inv = 1. / amp
+        amp_inv_99th_perc = matlab_alike_quantile(amp_inv, 0.95)
+        amp_inv_inlier = amp_inv[amp_inv < amp_inv_99th_perc]
+        amp_inv_thresholds = find_thresholds(amp_inv_inlier)
+        GAMRED_FILTER = 2
+        amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
+        save_csv_tmp(amp_out, amp_selection.reshape(1, -1), fmt='%i')
+        
+        final_selection = var_selection.copy()
+        final_selection[final_selection] = amp_selection
+        save_csv_tmp(final_out, final_selection.reshape(1, -1), fmt='%i')
+        save_csv_tmp(filt_mu, mu[final_selection].reshape(1, -1))
+        save_csv_tmp(filt_sig, sig[final_selection].reshape(1, -1))
+        save_csv_tmp(filt_w, w[final_selection].reshape(1, -1))
+
+
+class Convolve(BaseTask):
+    INPUT_DIR = NormalizeTIC.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '06-gmm-convolved')
+
+    dataset = luigi.Parameter(description="Dataset to convolve")
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        yield FilterComponents(datasets=self.datasets)
+        yield FindResamplingAxis(datasets=self.datasets)
+        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets)
+    
+    def output(self):
+        return self._as_target("{0}.npy".format(self.dataset))
+    
+    def run(self):
+        gmm, mzs, spectra = self.input()
+        *_, mu, sig, w = gmm
+        
+        mzs = load_csv(mzs.path).ravel()
+        mu = load_csv(mu.path).ravel()
+        sig = load_csv(sig.path).ravel()
+        w = load_csv(w.path).ravel()
+        spectra = np.load(spectra.path)
+
+        convolved = convolve(spectra, mzs, mu, sig, w)
+
+        with self.output().temporary_path() as tmp_path, \
+                open(tmp_path, 'wb') as out_file:
+            np.save(out_file, convolved)
+
+
+class MergeComponents(HelperTask):
+    INPUT_DIR = HelperTask.OUTPUT_DIR
+
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        return FilterComponents(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('merged_start_indices.csv')
+        yield self._as_target('merged_lengths.csv')
+        yield self._as_target('merged_mu.csv')
+        yield self._as_target('merged_sig.csv')
+        yield self._as_target('merged_w.csv')
+    
+    def run(self):
+        *_, mu, sig, w = self.input()
+        mu = load_csv(mu.path).ravel()
+        sig = load_csv(sig.path).ravel()
+        w = load_csv(w.path).ravel()
+
+        merged = mdl.merge(mdl.Components(mu, sig, w))
+        msg = "{0} merged components".format(merged.matches.indices.size)
+        logger.info(msg)
+        self.set_status_message(msg)
+        
+        indices, lengths, mu_dst, sig_dst, w_dst = self.output()
+        save_csv_tmp(indices, merged.matches.indices, fmt='%i')
+        save_csv_tmp(lengths, merged.matches.lengths, fmt='%i')
+        save_csv_tmp(mu_dst, merged.new_components.means)
+        save_csv_tmp(sig_dst, merged.new_components.sigmas)
+        save_csv_tmp(w_dst, merged.new_components.weights)
+
+
+class MergeDataset(BaseTask):
+    INPUT_DIR = Convolve.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '07-gmm-merged')
+
+    dataset = luigi.Parameter(description="Dataset to convolve")
+    datasets = luigi.ListParameter(description="Names of the datasets to use")
+
+    def requires(self):
+        yield Convolve(dataset=self.dataset, datasets=self.datasets)
+        yield MergeComponents(datasets=self.datasets)
+    
+    def output(self):
+        yield self._as_target('{0}.npy'.format(self.dataset))
+        yield self._as_target('mz.csv')
+    
+    def run(self):
+        spectra, components = self.input()
+        indices, lengths, mu, *_ = components
+        indices = load_csv(indices.path, dtype=int)
+        lengths = load_csv(lengths.path, dtype=int)
+        mu = load_csv(mu.path).reshape(1, -1)
+        self.set_status_message('Data loading')
+        spectra = np.load(spectra.path)
+
+        self.set_status_message('Merging components')
+        merged = mdl.apply_merging(spectra, mdl.Matches(indices, lengths))
+
+        self.set_status_message('Saving results')
+        spectra_dst, mz_dst = self.output()
+        if not mz_dst.exists():
+            save_csv_tmp(mz_dst, mu)
+        with spectra_dst.temporary_path() as tmp_path, \
+                open(tmp_path, 'wb') as out_file:
+            np.save(out_file, spectra)
