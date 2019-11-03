@@ -1,3 +1,3 @@
 #!/bin/bash
-sudo luigid --background
+luigid --background
 luigi --module pipeline PreprocessingPipeline --datasets "$@"
