@@ -23,7 +23,8 @@ class ExportCsv(BaseTask):
 
     def run(self):
         self.set_status_message('Loading data')
-        spectra = np.load(self.input().path)
+        spectra, _ = self.input()
+        spectra = np.load(spectra.path)
         self.set_status_message('Exporting .csv')
         with self.output().temporary_path() as tmp_path:
             np.savetxt(tmp_path, spectra, delimiter=',', fmt=self.fmt)
