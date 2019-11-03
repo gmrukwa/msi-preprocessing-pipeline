@@ -23,6 +23,11 @@ save_csv = partial(np.savetxt, delimiter=',')
 load_csv = partial(np.loadtxt, delimiter=',')
 
 
+def save_csv_tmp(out: luigi.LocalTarget, X, *args, **kwargs):
+    with out.temporary_path() as tmp_path:
+        save_csv(tmp_path, X, *args, **kwargs)
+
+
 class ExtractGMMReference(HelperTask):
     INPUT_DIR = NormalizeTIC.OUTPUT_DIR
 
@@ -45,8 +50,7 @@ class ExtractGMMReference(HelperTask):
         ]
         counts = [np.sum(approval) for approval in approvals]
         mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        with self.output().temporary_path() as tmp_path:
-            save_csv(tmp_path, mean)
+        save_csv_tmp(self.output(), mean)
 
 
 resample = np.interp
@@ -81,14 +85,10 @@ class ResampleGMMReference(HelperTask):
             number_of_ticks=EMPIRICAL_OPTIMAL_CHANNELS_NUMBER,
             axis_limits=limits
         )
-
-        with new_mzs_dst.temporary_path() as tmp_path:
-            save_csv(tmp_path, new_mzs.reshape(1, -1))
+        save_csv_tmp(new_mzs_dst, new_mzs.reshape(1, -1))
         
         resampled = resample(new_mzs, old_mzs, old_reference)
-
-        with reference_dst.temporary_path() as tmp_path:
-            save_csv(tmp_path, resampled.reshape(1, -1))
+        save_csv_tmp(reference_dst, resampled.reshape(1, -1))
 
 
 class BuildGMM(HelperTask):
@@ -116,12 +116,9 @@ class BuildGMM(HelperTask):
 
         logger.info('Found {0} GMM components'.format(mu.size))
 
-        with mu_dst.temporary_path() as tmp_path:
-            save_csv(tmp_path, mu)
-        with sig_dst.temporary_path() as tmp_path:
-            save_csv(tmp_path, sig)
-        with w_dst.temporary_path() as tmp_path:
-            save_csv(tmp_path, w)
+        save_csv_tmp(mu_dst, mu)
+        save_csv_tmp(sig_dst, sig)
+        save_csv_tmp(w_dst, w)
         with gmm_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'w') as out_file:
             json.dump(model, out_file, indent=2, sort_keys=True)
@@ -155,8 +152,7 @@ class FilterComponents(HelperTask):
         var_inlier = var[var < var_99th_perc]
         var_thresholds = find_thresholds(var_inlier)
         var_selection = var < var_thresholds[-1]
-        with var_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, var_selection.reshape(1, -1), fmt='%i')
+        save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
 
         amp = np.array([
             # it doesn't matter where the actual mu is, we need max
@@ -169,19 +165,14 @@ class FilterComponents(HelperTask):
         amp_inv_thresholds = find_thresholds(amp_inv_inlier)
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
-        with amp_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, amp_selection.reshape(1, -1), fmt='%i')
+        save_csv_tmp(amp_out, amp_selection.reshape(1, -1), fmt='%i')
         
         final_selection = var_selection.copy()
         final_selection[final_selection] = amp_selection
-        with final_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, final_selection.reshape(1, -1), fmt='%i')
-        with filt_mu.temporary_path() as tmp_path:
-            save_csv(tmp_path, mu[final_selection].reshape(1, -1))
-        with filt_sig.temporary_path() as tmp_path:
-            save_csv(tmp_path, sig[final_selection].reshape(1, -1))
-        with filt_w.temporary_path() as tmp_path:
-            save_csv(tmp_path, w[final_selection].reshape(1, -1))
+        save_csv_tmp(final_out, final_selection.reshape(1, -1), fmt='%i')
+        save_csv_tmp(filt_mu, mu[final_selection].reshape(1, -1))
+        save_csv_tmp(filt_sig, sig[final_selection].reshape(1, -1))
+        save_csv_tmp(filt_w, w[final_selection].reshape(1, -1))
 
 
 class Convolve(BaseTask):
