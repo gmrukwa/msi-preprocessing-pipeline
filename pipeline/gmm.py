@@ -134,12 +134,16 @@ class FilterComponents(HelperTask):
         yield self._as_target('gmm_var_selection.csv')
         yield self._as_target('gmm_amp_selection.csv')
         yield self._as_target('gmm_final_selection.csv')
+        yield self._as_target('filtered_mu.csv')
+        yield self._as_target('filtered_sig.csv')
+        yield self._as_target('filtered_w.csv')
 
     def run(self):
         mu, sig, w, _ = self.input()
         mu = load_csv(mu.path)
         sig = load_csv(sig.path)
         w = load_csv(w.path, delimiter=',')
+        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w = self.output()
 
         var = sig ** 2
         var_99th_perc = matlab_alike_quantile(var, 0.99)
@@ -167,3 +171,9 @@ class FilterComponents(HelperTask):
         final_selection[final_selection] = amp_selection
         with final_out.temporary_path() as tmp_path:
             save_csv(tmp_path, final_selection.reshape(1, -1))
+        with filt_mu.temporary_path() as tmp_path:
+            save_csv(tmp_path, mu[final_selection].reshape(1, -1))
+        with filt_sig.temporary_path() as tmp_path:
+            save_csv(tmp_path, sig[final_selection].reshape(1, -1))
+        with filt_w.temporary_path() as tmp_path:
+            save_csv(tmp_path, w[final_selection].reshape(1, -1))
