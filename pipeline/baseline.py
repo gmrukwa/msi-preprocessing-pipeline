@@ -1,3 +1,5 @@
+import os
+
 from functional import pmap
 import luigi
 import numpy as np
@@ -37,6 +39,7 @@ class RemoveBaseline(BaseTask):
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, lowered)
+
 
 if __name__ == '__main__':
     luigi.build([RemoveBaseline()], local_scheduler=True)
