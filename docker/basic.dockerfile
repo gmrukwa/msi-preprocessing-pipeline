@@ -13,6 +13,8 @@ COPY bin bin
 
 COPY components components
 
+COPY pipeline pipeline
+
 COPY test test
 
 RUN python -m unittest discover
