@@ -3,6 +3,9 @@
     <words>
       <w>datasets</w>
       <w>preprocessing</w>
+      <w>resample</w>
+      <w>resampling</w>
+      <w>tqdm</w>
     </words>
   </dictionary>
 </component>
