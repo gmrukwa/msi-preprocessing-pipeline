@@ -1,5 +1,7 @@
 from functools import partial
+import os
 
+import luigi
 import numpy as np
 from tqdm import tqdm
 
@@ -11,7 +13,7 @@ from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
 
 
-class ExtractPaFFTReference(HelperTask):
+class ExtractPaFFTReference(ExtractReference):
     INPUT_DIR = RemoveBaseline.INPUT_DIR
 
     datasets = luigi.ListParameter(description="Names of the datasets to use")
@@ -23,18 +25,6 @@ class ExtractPaFFTReference(HelperTask):
     
     def output(self):
         return self._as_target("pafft_reference.csv")
-
-    def run(self):
-        approvals, *datasets = self.input()
-        approvals = [np.load(approval.path) for approval in approvals]
-        references = [
-            np.load(spectra.path)[selection].mean(axis=0)
-            for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
-        ]
-        counts = [np.sum(approval) for approval in approvals]
-        mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
-        with self.output().temporary_path() as tmp_path:
-            np.savetxt(tmp_path, mean, delimiter=',')
 
 
 class PaFFT(BaseTask):
@@ -54,14 +44,17 @@ class PaFFT(BaseTask):
 
     def run(self):
         mzs, reference, spectra = self.input()
+        self.set_status_message('Loading data')
         mzs = np.loadtxt(mzs.path, delimiter=',')
         reference = np.loadtxt(reference.path, delimiter=',')
         spectra = np.load(spectra.path)
+        self.set_status_message('Spectra alignment')
         align = partial(pafft, mzs=mzs, reference_counts=reference)
         aligned = [
             align(spectrum) for spectrum
             in tqdm(LuigiTqdm(spectra, self), desc='Alignment')
         ]
+        self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, aligned)

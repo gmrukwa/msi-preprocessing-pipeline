@@ -35,11 +35,14 @@ class DetectOutliers(BaseTask):
         ]
     
     def run(self):
+        self.set_status_message('Loading data')
         tics = [
             np.load(spectra.path).sum(axis=1)
             for spectra in LuigiTqdm(self.input(), self)
         ]
+        self.set_status_message('Outlier detection')
         outliers = detect(np.hstack(tics))
+        self.set_status_message('Saving results')
         chunk_outliers = _scatter(outliers, like=tics)
         for dataset, detection in zip(self.datasets, chunk_outliers):
             logger.info(

@@ -1,6 +1,6 @@
 FROM spectreteam/python_msi:v5.0.0
 
-COPY requirements/basic-strict.txt /requirements.txt
+COPY requirements.txt /requirements.txt
 
 RUN pip install --no-cache-dir -r /requirements.txt &&\
     rm /requirements.txt
@@ -22,3 +22,9 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
+
+# Luigi scheduler port
+EXPOSE 8082
+
+# Data mount point
+VOLUME /data
