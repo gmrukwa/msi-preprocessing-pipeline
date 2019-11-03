@@ -155,7 +155,7 @@ class FilterComponents(HelperTask):
         var_thresholds = find_thresholds(var_inlier)
         var_selection = var < var_thresholds[-1]
         with var_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, var_selection.reshape(1, -1))
+            save_csv(tmp_path, var_selection.reshape(1, -1), fmt='%i')
 
         amp = np.array([
             # it doesn't matter where the actual mu is, we need max
@@ -169,12 +169,12 @@ class FilterComponents(HelperTask):
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
         with amp_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, amp_selection.reshape(1, -1))
+            save_csv(tmp_path, amp_selection.reshape(1, -1), fmt='%i')
         
         final_selection = var_selection.copy()
         final_selection[final_selection] = amp_selection
         with final_out.temporary_path() as tmp_path:
-            save_csv(tmp_path, final_selection.reshape(1, -1))
+            save_csv(tmp_path, final_selection.reshape(1, -1), fmt='%i')
         with filt_mu.temporary_path() as tmp_path:
             save_csv(tmp_path, mu[final_selection].reshape(1, -1))
         with filt_sig.temporary_path() as tmp_path:
