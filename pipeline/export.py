@@ -1,3 +1,5 @@
+import os
+
 import luigi
 import numpy as np
 
@@ -7,9 +9,12 @@ from pipeline.gmm import MergeDataset
 
 class ExportCsv(BaseTask):
     INPUT_DIR = MergeDataset.OUTPUT_DIR
+    OUTPUT_DIR = os.path.join(BaseTask.OUTPUT_DIR, '08-exported')
 
     dataset = luigi.Parameter(description="Dataset to export")
-    datasets = luigi.ListParameter(description="Names of the datasets to use")
+    datasets = luigi.ListParameter(
+        description="Names of the datasets to use",
+        visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     fmt = luigi.Parameter(description="Format of numbers during export",
                           default='%.18e')
     
@@ -21,7 +26,8 @@ class ExportCsv(BaseTask):
 
     def run(self):
         self.set_status_message('Loading data')
-        spectra = np.load(self.input().path)
+        spectra, _ = self.input()
+        spectra = np.load(spectra.path)
         self.set_status_message('Exporting .csv')
         with self.output().temporary_path() as tmp_path:
             np.savetxt(tmp_path, spectra, delimiter=',', fmt=self.fmt)

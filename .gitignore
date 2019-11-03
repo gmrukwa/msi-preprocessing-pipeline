@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# sample-data
+sample-data/*
+!sample-data/raw
