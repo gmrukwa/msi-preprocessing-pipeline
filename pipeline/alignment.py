@@ -54,14 +54,17 @@ class PaFFT(BaseTask):
 
     def run(self):
         mzs, reference, spectra = self.input()
+        self.set_status_message('Loading data')
         mzs = np.loadtxt(mzs.path, delimiter=',')
         reference = np.loadtxt(reference.path, delimiter=',')
         spectra = np.load(spectra.path)
+        self.set_status_message('Spectra alignment')
         align = partial(pafft, mzs=mzs, reference_counts=reference)
         aligned = [
             align(spectrum) for spectrum
             in tqdm(LuigiTqdm(spectra, self), desc='Alignment')
         ]
+        self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, aligned)

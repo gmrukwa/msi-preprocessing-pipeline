@@ -41,14 +41,15 @@ class ResampleDataset(BaseTask):
     
     def run(self):
         from bin.resample_datasets import spectrum_sampling_pipe
-        from functional import for_each, pipe, progress_bar
+        from functional import for_each, pipe, progress_bar, tee
         from components.io_utils import text_files
 
-        with self.input().open() as axis_file:
-            new_axis = np.loadtxt(axis_file, delimiter=',')
+        self.set_status_message('Loading data')
+        new_axis = np.loadtxt(self.input().path, delimiter=',')
 
         dataset_sampling_pipe = pipe(
             text_files, list,
+            tee(lambda _: self.set_status_message('Resampling dataset')),
             partial(LuigiTqdm, task=self),
             progress_bar('resampling dataset'),
             for_each(spectrum_sampling_pipe(new_axis),
@@ -58,6 +59,7 @@ class ResampleDataset(BaseTask):
         resampled = dataset_sampling_pipe(
             os.path.join(self.INPUT_DIR, self.dataset))
 
+        self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, resampled)

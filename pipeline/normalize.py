@@ -24,14 +24,17 @@ class ExtractTICReference(HelperTask):
         return self._as_target("tic_normalization_reference.csv")
 
     def run(self):
+        self.set_status_message('Loading data')
         approvals, *datasets = self.input()
         approvals = [np.load(approval.path) for approval in approvals]
+        self.set_status_message('Computing references')
         references = [
             np.load(spectra.path)[selection].mean(axis=0)
             for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
         ]
         counts = [np.sum(approval) for approval in approvals]
         mean = np.average(references, axis=0, weights=counts).reshape(1, -1)
+        self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path:
             np.savetxt(tmp_path, mean, delimiter=',')
 
@@ -56,15 +59,19 @@ class NormalizeTIC(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
     
     def run(self):
+        self.set_status_message('Loading data')
         reference, spectra = self.input()
         reference = np.loadtxt(reference.path, delimiter=',')
         spectra = np.load(spectra.path)
+        self.set_status_message('Computing reference TIC')
         reference_tic = np.sum(reference)
         logger.info("Reference TIC: {0}".format(reference_tic))
+        self.set_status_message('Normalizing spectra')
         rescale = partial(scale_to_tic, reference_tic=reference_tic)
         spectra = LuigiTqdm(spectra, self)
         spectra = tqdm(spectra, desc='TIC normalization')
         normalized = pmap(rescale, spectra, chunksize=800)
+        self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, normalized)
