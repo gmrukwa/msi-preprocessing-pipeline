@@ -137,10 +137,9 @@ class FilterComponents(HelperTask):
 
     def run(self):
         mu, sig, w, _ = self.input()
-        mu = np.loadtxt(mu.path, delimiter=',')
-        sig = np.loadtxt(sig.path, delimiter=',')
-        w = np.loadtxt(w.path, delimiter=',')
-        var_out, amp_out, final_out = self.output()
+        mu = load_csv(mu.path)
+        sig = load_csv(sig.path)
+        w = load_csv(w.path, delimiter=',')
 
         var = sig ** 2
         var_99th_perc = matlab_alike_quantile(var, 0.99)
@@ -148,7 +147,7 @@ class FilterComponents(HelperTask):
         var_thresholds = find_thresholds(var_inlier)
         var_selection = var < var_thresholds[-1]
         with var_out.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, var_selection.reshape(1, -1), delimiter=',')
+            save_csv(tmp_path, var_selection.reshape(1, -1))
 
         amp = np.array([
             # it doesn't matter where the actual mu is, we need max
@@ -162,9 +161,9 @@ class FilterComponents(HelperTask):
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
         with amp_out.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, amp_selection.reshape(1, -1), delimiter=',')
+            save_csv(tmp_path, amp_selection.reshape(1, -1))
         
         final_selection = var_selection.copy()
         final_selection[final_selection] = amp_selection
         with final_out.temporary_path() as tmp_path:
-            np.savetxt(tmp_path, final_selection.reshape(1, -1), delimiter=',')
+            save_csv(tmp_path, final_selection.reshape(1, -1))
