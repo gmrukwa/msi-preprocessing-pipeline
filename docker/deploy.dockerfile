@@ -24,3 +24,5 @@ EXPOSE 8082
 
 # Data mount point
 VOLUME /data
+
+RUN mkdir /luigi
