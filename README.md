@@ -1,7 +1,7 @@
 [![CodeFactor](https://www.codefactor.io/repository/github/gmrukwa/msi-preprocessing-pipeline/badge)](https://www.codefactor.io/repository/github/gmrukwa/msi-preprocessing-pipeline)
 [![BCH compliance](https://bettercodehub.com/edge/badge/gmrukwa/msi-preprocessing-pipeline?branch=master)](https://bettercodehub.com/)
 [![Maintainability](https://api.codeclimate.com/v1/badges/2fdbd93c4e668763b873/maintainability)](https://codeclimate.com/github/gmrukwa/msi-preprocessing-pipeline/maintainability)
-https://github.com/gmrukwa/msi-preprocessing-pipeline/workflows/deploy.yml/badge.svg
+[![Build and push deployment images](https://github.com/gmrukwa/msi-preprocessing-pipeline/workflows/Build%20and%20push%20deployment%20images/badge.svg)](https://github.com/gmrukwa/msi-preprocessing-pipeline/actions?query=workflow%3A%22Build+and+push+deployment+images%22)
 
 # MSI Preprocessing Pipeline
 
