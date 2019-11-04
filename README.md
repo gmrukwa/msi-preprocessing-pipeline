@@ -107,8 +107,19 @@ numpy-related `.npy`), you can simply add a switch `--export-csv`:
 docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --export-csv
 ```
 
-**Note:** The `--export-csv` switch must appear last (due to the way
-Docker handles arguments).
+**Note:** There is no space between dataset names.
+
+**Note:** The `--export-csv` switch must appear right after the datasets
+(due to the way Docker handles arguments).
+
+If you want to review time needed for each task to process, you can prevent
+scheduler from being stopped with `--keep-alive` switch:
+
+```bash
+docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --keep-alive
+```
+
+**Note:** `--keep-alive` switch must always come last.
 
 #### Launch Sample
 
