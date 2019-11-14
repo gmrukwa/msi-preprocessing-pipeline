@@ -138,34 +138,34 @@ class FilterComponents(HelperTask):
         w = load_csv(w.path, delimiter=',')
         var_out, amp_out, final_out, filt_mu, filt_sig, filt_w = self.output()
 
-        msg = 'Variance filtering (out of {0})'.format(mu.size)
-        logger.info(msg)
-        self.set_status_message(msg)
-        var = sig ** 2
-        var_99th_perc = matlab_alike_quantile(var, 0.99)
-        var_inlier = var[var < var_99th_perc]
-        var_thresholds = find_thresholds(var_inlier)
-        var_selection = var < var_thresholds[-1]
-        save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
-
-        msg = 'Amplitude filtering (out of {0})'.format(np.sum(var_selection))
+        msg = 'Amplitude filtering (out of {0})'.format(mu.size)
         logger.info(msg)
         self.set_status_message(msg)
         amp = np.array([
             # it doesn't matter where the actual mu is, we need max
             w_ * norm.pdf(0, 0, sig_) for w_, sig_
-            in zip(w[var_selection], sig[var_selection])
+            in zip(w, sig)
         ])
         amp_inv = 1. / amp
-        amp_inv_99th_perc = matlab_alike_quantile(amp_inv, 0.95)
-        amp_inv_inlier = amp_inv[amp_inv < amp_inv_99th_perc]
+        amp_inv_95th_perc = matlab_alike_quantile(amp_inv, 0.95)
+        amp_inv_inlier = amp_inv[amp_inv < amp_inv_95th_perc]
         amp_inv_thresholds = find_thresholds(amp_inv_inlier)
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
         save_csv_tmp(amp_out, amp_selection.reshape(1, -1), fmt='%i')
+
+        msg = 'Variance filtering (out of {0})'.format(np.sum(amp_selection))
+        logger.info(msg)
+        self.set_status_message(msg)
+        var = sig[amp_selection] ** 2
+        var_99th_perc = matlab_alike_quantile(var, 0.99)
+        var_inlier = var[var < var_99th_perc]
+        var_thresholds = find_thresholds(var_inlier)
+        var_selection = var < var_thresholds[-1]
+        save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
         
-        final_selection = var_selection.copy()
-        final_selection[final_selection] = amp_selection
+        final_selection = amp_selection.copy()
+        final_selection[final_selection] = var_selection
         
         msg = 'Saving {0} filtered components'.format(np.sum(final_selection))
         logger.info(msg)
