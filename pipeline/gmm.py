@@ -236,7 +236,9 @@ class MergeComponents(HelperTask):
 
         self.set_status_message('Components merging')
         merged = mdl.merge(mdl.Components(mu, sig, w))
-        msg = "{0} merged components".format(merged.matches.indices.size)
+        msg = "{0} merged components, compression rate {1}".format(
+            merged.matches.indices.size,
+            merged.matches.lengths.mean())
         logger.info(msg)
         self.set_status_message(msg)
         
