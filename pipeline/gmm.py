@@ -161,11 +161,17 @@ class FilterComponents(HelperTask):
         var_99th_perc = matlab_alike_quantile(var, 0.99)
         var_inlier = var[var < var_99th_perc]
         var_thresholds = find_thresholds(var_inlier)
+        logger.info("Found {0} thresholds".format(len(var_thresholds)))
         for idx, thr in enumerate(var_thresholds[::-1]):
             var_selection = var < thr
-            if 1000 <= np.sum(var_selection) <= 3000:
+            if 1000 <= np.sum(var_selection) <= 3500:
                 logger.info("Selected {0} highest threshold".format(idx))
                 break
+            else:
+                logger.info("Dropped threshold allowing for {0} components"
+                            .format(np.sum(var_selection)))
+        else:
+            logger.info("Selected just some threshold (not a preferred).")
         save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
         
         final_selection = amp_selection.copy()
