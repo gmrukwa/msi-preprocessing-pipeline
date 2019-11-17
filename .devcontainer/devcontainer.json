@@ -3,7 +3,7 @@
     "context": "..",
     "dockerFile": "../docker/dev.dockerfile",
   
-    "appPort": ["8082:8082"],
+    "appPort": ["80:8082"],
   
     "runArgs": [
         "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh-localhost:ro",
