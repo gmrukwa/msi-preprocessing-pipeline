@@ -13,16 +13,10 @@
                 "--module",
                 "pipeline",
                 "PreprocessingPipeline",
-                "--local-scheduler"
+                "--datasets",
+                "[\"my-dataset1\",\"my-dataset2\"]",
+                "--export-csv"
             ]
-        },
-        {
-            "name": "Baseline removal",
-            "type": "python",
-            "request": "launch",
-            "module": "pipeline.baseline",
-            "args": [
-            ]
-        },
+        }
     ]
 }
