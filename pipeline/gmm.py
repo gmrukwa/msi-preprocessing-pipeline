@@ -167,6 +167,7 @@ class FilterComponents(HelperTask):
         var_inlier = var[var < var_99th_perc]
         var_thresholds = find_thresholds(var_inlier)
         logger.info("Found {0} thresholds".format(len(var_thresholds)))
+        var_selection = np.ones_like(var, dtype=bool)
         for idx, thr in enumerate(var_thresholds[::-1]):
             var_selection = var < thr
             if 1000 <= np.sum(var_selection) <= 3500:
