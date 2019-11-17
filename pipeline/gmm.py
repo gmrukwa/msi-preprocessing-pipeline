@@ -15,6 +15,7 @@ from pipeline._base import *
 from pipeline.normalize import NormalizeTIC
 from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
+from plot import save_decomposition
 
 
 save_csv = partial(np.savetxt, delimiter=',')
@@ -129,6 +130,8 @@ class FilterComponents(HelperTask):
         yield self._as_target('filtered_mu.csv')
         yield self._as_target('filtered_sig.csv')
         yield self._as_target('filtered_w.csv')
+        yield self._as_target('thresholds_amp.html')
+        yield self._as_target('thresholds_var.html')
 
     def run(self):
         self.set_status_message('Loading data')
@@ -136,7 +139,8 @@ class FilterComponents(HelperTask):
         mu = load_csv(mu.path)
         sig = load_csv(sig.path)
         w = load_csv(w.path, delimiter=',')
-        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w = self.output()
+        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w, \
+            amp_plot, var_plot = self.output()
 
         msg = 'Amplitude filtering (out of {0})'.format(mu.size)
         logger.info(msg)
@@ -152,6 +156,7 @@ class FilterComponents(HelperTask):
         amp_inv_thresholds = find_thresholds(amp_inv_inlier)
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
+        save_decomposition(amp_inv_inlier, amp_inv_thresholds, amp_plot)
         save_csv_tmp(amp_out, amp_selection.reshape(1, -1), fmt='%i')
 
         msg = 'Variance filtering (out of {0})'.format(np.sum(amp_selection))
@@ -172,6 +177,7 @@ class FilterComponents(HelperTask):
                             .format(np.sum(var_selection)))
         else:
             logger.info("Selected just some threshold (not a preferred).")
+        save_decomposition(var_inlier, var_thresholds, var_plot)
         save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
         
         final_selection = amp_selection.copy()
@@ -206,7 +212,7 @@ class Convolve(BaseTask):
     def run(self):
         self.set_status_message('Loading data')
         gmm, mzs, spectra = self.input()
-        *_, mu, sig, w = gmm
+        *_, mu, sig, w, _, _ = gmm
         mzs = load_csv(mzs.path).ravel()
         mu = load_csv(mu.path).ravel()
         sig = load_csv(sig.path).ravel()
@@ -239,7 +245,7 @@ class MergeComponents(HelperTask):
     
     def run(self):
         self.set_status_message('Loading data')
-        *_, mu, sig, w = self.input()
+        *_, mu, sig, w, _, _ = self.input()
         mu = load_csv(mu.path).ravel()
         sig = load_csv(sig.path).ravel()
         w = load_csv(w.path).ravel()
