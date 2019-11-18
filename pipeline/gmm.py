@@ -163,8 +163,8 @@ class FilterComponents(HelperTask):
         logger.info(msg)
         self.set_status_message(msg)
         var = sig[amp_selection] ** 2
-        var_99th_perc = matlab_alike_quantile(var, 0.99)
-        var_inlier = var[var < var_99th_perc]
+        var_95th_perc = matlab_alike_quantile(var, 0.95)
+        var_inlier = var[var < var_95th_perc]
         var_thresholds = find_thresholds(var_inlier)
         logger.info("Found {0} thresholds".format(len(var_thresholds)))
         var_selection = np.ones_like(var, dtype=bool)
