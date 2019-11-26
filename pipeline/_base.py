@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 
@@ -34,6 +35,12 @@ class BaseTask(luigi.Task):
 
     def _as_target(self, fname: str):
         return luigi.LocalTarget(os.path.join(self.OUTPUT_DIR, fname))
+
+
+@BaseTask.event_handler(luigi.Event.FAILURE)
+@BaseTask.event_handler(luigi.Event.SUCCESS)
+def cleanup(task):
+    gc.collect()
 
 
 class HelperTask(BaseTask):
