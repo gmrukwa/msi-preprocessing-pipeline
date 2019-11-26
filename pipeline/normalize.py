@@ -1,4 +1,5 @@
 from functools import partial
+import gc
 from multiprocessing import Pool
 import os
 
@@ -64,6 +65,8 @@ class NormalizeTIC(BaseTask):
         with Pool(processes=self.pool_size) as pool:
             normalized = pool.map(rescale, spectra, chunksize=800)
         self.set_status_message('Saving results')
+        del spectra
+        gc.collect()
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, normalized)

@@ -1,4 +1,5 @@
 from functools import partial
+import gc
 import os
 
 import luigi
@@ -61,6 +62,8 @@ class PaFFT(BaseTask):
             in tqdm(LuigiTqdm(spectra, self), desc='Alignment')
         ]
         self.set_status_message('Saving results')
+        del spectra
+        gc.collect()
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, aligned)
