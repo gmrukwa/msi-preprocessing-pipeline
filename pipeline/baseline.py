@@ -1,4 +1,5 @@
 from functools import partial
+import gc
 from multiprocessing import Pool
 import os
 
@@ -44,6 +45,8 @@ class RemoveBaseline(BaseTask):
                 chunksize=800
             )
         self.set_status_message('Saving result')
+        del spectra
+        gc.collect()
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, lowered)

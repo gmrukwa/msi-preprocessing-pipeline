@@ -1,6 +1,7 @@
+from functools import partial
+import gc
 import json
 import os
-from functools import partial
 
 import luigi
 import numpy as np
@@ -231,6 +232,8 @@ class Convolve(BaseTask):
         convolved = convolve(spectra, mzs, mu, sig, w)
 
         self.set_status_message('Saving results')
+        del spectra
+        gc.collect()
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, convolved)
@@ -306,6 +309,8 @@ class MergeDataset(BaseTask):
         merged = mdl.apply_merging(spectra, mdl.Matches(indices, lengths))
 
         self.set_status_message('Saving results')
+        del spectra
+        gc.collect()
         spectra_dst, mz_dst = self.output()
         if not mz_dst.exists():
             save_csv_tmp(mz_dst, mu)
