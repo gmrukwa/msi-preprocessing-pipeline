@@ -15,6 +15,7 @@ from pipeline._base import *
 from pipeline.normalize import NormalizeTIC
 from pipeline.outlier import DetectOutliers
 from pipeline.resampling import FindResamplingAxis
+from plot import save_decomposition
 
 
 save_csv = partial(np.savetxt, delimiter=',')
@@ -32,9 +33,10 @@ class ExtractGMMReference(ExtractReference):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield DetectOutliers(datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield NormalizeTIC(dataset=dataset, datasets=self.datasets)
+            yield NormalizeTIC(dataset=dataset, datasets=self.datasets,
+                               pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("gmm_reference.csv")
@@ -52,8 +54,10 @@ class ResampleGMMReference(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield FindResamplingAxis(datasets=self.datasets)
-        yield ExtractGMMReference(datasets=self.datasets)
+        yield FindResamplingAxis(datasets=self.datasets,
+                                 pool_size=self.pool_size)
+        yield ExtractGMMReference(datasets=self.datasets,
+                                  pool_size=self.pool_size)
 
     def output(self):
         yield self._as_target('resampled_gmm_reference.csv')
@@ -86,7 +90,8 @@ class BuildGMM(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return ResampleGMMReference(datasets=self.datasets)
+        return ResampleGMMReference(datasets=self.datasets,
+                                    pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('mu.csv')
@@ -120,7 +125,7 @@ class FilterComponents(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return BuildGMM(datasets=self.datasets)
+        return BuildGMM(datasets=self.datasets, pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('gmm_var_selection.csv')
@@ -129,6 +134,8 @@ class FilterComponents(HelperTask):
         yield self._as_target('filtered_mu.csv')
         yield self._as_target('filtered_sig.csv')
         yield self._as_target('filtered_w.csv')
+        yield self._as_target('thresholds_amp.html')
+        yield self._as_target('thresholds_var.html')
 
     def run(self):
         self.set_status_message('Loading data')
@@ -136,7 +143,8 @@ class FilterComponents(HelperTask):
         mu = load_csv(mu.path)
         sig = load_csv(sig.path)
         w = load_csv(w.path, delimiter=',')
-        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w = self.output()
+        var_out, amp_out, final_out, filt_mu, filt_sig, filt_w, \
+            amp_plot, var_plot = self.output()
 
         msg = 'Amplitude filtering (out of {0})'.format(mu.size)
         logger.info(msg)
@@ -152,20 +160,29 @@ class FilterComponents(HelperTask):
         amp_inv_thresholds = find_thresholds(amp_inv_inlier)
         GAMRED_FILTER = 2
         amp_selection = amp_inv < amp_inv_thresholds[GAMRED_FILTER]
+        save_decomposition(amp_inv_inlier, amp_inv_thresholds, amp_plot)
         save_csv_tmp(amp_out, amp_selection.reshape(1, -1), fmt='%i')
 
         msg = 'Variance filtering (out of {0})'.format(np.sum(amp_selection))
         logger.info(msg)
         self.set_status_message(msg)
         var = sig[amp_selection] ** 2
-        var_99th_perc = matlab_alike_quantile(var, 0.99)
-        var_inlier = var[var < var_99th_perc]
+        var_95th_perc = matlab_alike_quantile(var, 0.95)
+        var_inlier = var[var < var_95th_perc]
         var_thresholds = find_thresholds(var_inlier)
+        logger.info("Found {0} thresholds".format(len(var_thresholds)))
+        var_selection = np.ones_like(var, dtype=bool)
         for idx, thr in enumerate(var_thresholds[::-1]):
             var_selection = var < thr
-            if 1000 <= np.sum(var_selection) <= 3000:
+            if 1000 <= np.sum(var_selection) <= 3500:
                 logger.info("Selected {0} highest threshold".format(idx))
                 break
+            else:
+                logger.info("Dropped threshold allowing for {0} components"
+                            .format(np.sum(var_selection)))
+        else:
+            logger.info("Selected just some threshold (not a preferred).")
+        save_decomposition(var_inlier, var_thresholds, var_plot)
         save_csv_tmp(var_out, var_selection.reshape(1, -1), fmt='%i')
         
         final_selection = amp_selection.copy()
@@ -190,9 +207,12 @@ class Convolve(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield FilterComponents(datasets=self.datasets)
-        yield FindResamplingAxis(datasets=self.datasets)
-        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets)
+        yield FilterComponents(datasets=self.datasets,
+                               pool_size=self.pool_size)
+        yield FindResamplingAxis(datasets=self.datasets,
+                                 pool_size=self.pool_size)
+        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets,
+                           pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))
@@ -200,7 +220,7 @@ class Convolve(BaseTask):
     def run(self):
         self.set_status_message('Loading data')
         gmm, mzs, spectra = self.input()
-        *_, mu, sig, w = gmm
+        *_, mu, sig, w, _, _ = gmm
         mzs = load_csv(mzs.path).ravel()
         mu = load_csv(mu.path).ravel()
         sig = load_csv(sig.path).ravel()
@@ -222,7 +242,8 @@ class MergeComponents(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return FilterComponents(datasets=self.datasets)
+        return FilterComponents(datasets=self.datasets,
+                                pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('merged_start_indices.csv')
@@ -233,7 +254,7 @@ class MergeComponents(HelperTask):
     
     def run(self):
         self.set_status_message('Loading data')
-        *_, mu, sig, w = self.input()
+        *_, mu, sig, w, _, _ = self.input()
         mu = load_csv(mu.path).ravel()
         sig = load_csv(sig.path).ravel()
         w = load_csv(w.path).ravel()
@@ -264,8 +285,9 @@ class MergeDataset(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield Convolve(dataset=self.dataset, datasets=self.datasets)
-        yield MergeComponents(datasets=self.datasets)
+        yield Convolve(dataset=self.dataset, datasets=self.datasets,
+                       pool_size=self.pool_size)
+        yield MergeComponents(datasets=self.datasets, pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('{0}.npy'.format(self.dataset))

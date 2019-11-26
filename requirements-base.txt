@@ -3,6 +3,7 @@ luigi
 numpy
 numba
 pandas
+plotly
 scipy
 sendgrid
 sqlalchemy

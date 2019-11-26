@@ -24,7 +24,8 @@ class DetectOutliers(BaseTask):
 
     def requires(self):
         return [
-            RemoveBaseline(dataset=dataset, datasets=self.datasets)
+            RemoveBaseline(dataset=dataset, datasets=self.datasets,
+                           pool_size=self.pool_size)
             for dataset in self.datasets
         ]
     

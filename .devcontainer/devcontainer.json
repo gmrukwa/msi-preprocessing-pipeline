@@ -3,15 +3,15 @@
     "context": "..",
     "dockerFile": "../docker/dev.dockerfile",
   
-    "appPort": ["8082:8082"],
+    "appPort": ["80:8082"],
   
     "runArgs": [
         "-v", "${env:HOME}${env:USERPROFILE}/.ssh:/home/vscode/.ssh-localhost:ro",
-        "-v", "${env:HOME}${env:USERPROFILE}/dummy-raw-msi:/data",
+        "-v", "${localWorkspaceFolder}/sample-data:/data",
         "-u", "vscode"
     ],
 
-    "postCreateCommand": "cp -r ~/.ssh-localhost ~/.ssh && sudo chown -R $(id -u):$(id -g) ~/.ssh && chmod 700 ~/.ssh && chmod 600 ~/.ssh/* && rm -f ~/.ssh/config",
+    "postCreateCommand": "cp -r ~/.ssh-localhost ~/.ssh && sudo chown -R $(id -u):$(id -g) ~/.ssh && chmod 700 ~/.ssh && chmod 600 ~/.ssh/* && rm -f ~/.ssh/config && sudo luigid --background",
   
     "settings": { 
         "terminal.integrated.shell.linux": "/bin/bash",

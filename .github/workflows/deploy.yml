@@ -12,7 +12,7 @@ on:
 env:
   MAJOR: ${{ 1 }}
   MINOR: ${{ 0 }}
-  FIXUP: ${{ 0 }}
+  FIXUP: ${{ 2 }}
   DOCKER_REPO: ${{ 'gmrukwa/msi-preprocessing' }}
   IS_ALPHA: ${{ github.event_name == 'pull_request' }}
   IS_BETA: ${{ github.event_name == 'push' && endsWith(github.event.ref, 'heads/develop') }}

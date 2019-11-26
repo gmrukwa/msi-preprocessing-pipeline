@@ -19,7 +19,8 @@ class ExportCsv(BaseTask):
                           default='%.18e')
     
     def requires(self):
-        return MergeDataset(dataset=self.dataset, datasets=self.datasets)
+        return MergeDataset(dataset=self.dataset, datasets=self.datasets,
+                            pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.csv".format(self.dataset))

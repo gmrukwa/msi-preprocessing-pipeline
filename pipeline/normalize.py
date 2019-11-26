@@ -1,7 +1,7 @@
 from functools import partial
+from multiprocessing import Pool
 import os
 
-from functional import pmap
 import luigi
 import numpy as np
 from tqdm import tqdm
@@ -17,9 +17,10 @@ class ExtractTICReference(ExtractReference):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield DetectOutliers(datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield PaFFT(dataset=dataset, datasets=self.datasets)
+            yield PaFFT(dataset=dataset, datasets=self.datasets,
+                        pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("tic_normalization_reference.csv")
@@ -40,8 +41,10 @@ class NormalizeTIC(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield ExtractTICReference(datasets=self.datasets)
-        yield PaFFT(dataset=self.dataset, datasets=self.datasets)
+        yield ExtractTICReference(datasets=self.datasets,
+                                  pool_size=self.pool_size)
+        yield PaFFT(dataset=self.dataset, datasets=self.datasets,
+                    pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))
@@ -58,7 +61,8 @@ class NormalizeTIC(BaseTask):
         rescale = partial(scale_to_tic, reference_tic=reference_tic)
         spectra = LuigiTqdm(spectra, self)
         spectra = tqdm(spectra, desc='TIC normalization')
-        normalized = pmap(rescale, spectra, chunksize=800)
+        with Pool(processes=self.pool_size) as pool:
+            normalized = pool.map(rescale, spectra, chunksize=800)
         self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:

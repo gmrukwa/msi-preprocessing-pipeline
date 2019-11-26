@@ -109,7 +109,7 @@ If you need output data also in the format of `.csv` files (not a binary
 numpy-related `.npy`), you can simply add a switch `--export-csv`:
 
 ```bash
-docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --export-csv
+docker run --rm -ti -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --export-csv
 ```
 
 **Note:** There is no space between dataset names.
@@ -121,7 +121,7 @@ If you want to review time needed for each task to process, you can prevent
 scheduler from being stopped with `--keep-alive` switch:
 
 ```bash
-docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --keep-alive
+docker run --rm -ti -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --keep-alive
 ```
 
 **Note:** `--keep-alive` switch must always come last.
@@ -135,6 +135,18 @@ docker run -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset
 Building GMM model takes longer time (at least 1 hour), so be patient.
 
 ## Advanced
+
+### CPUs Limit
+
+It may happen that the data is actually too big to be copied across all your CPUs.
+Then it may be useful to limit the number of the CPU cores exploited.
+You can do this via additional switch `--pool-size`. By default all cores
+are used (or single one, when detection was impossible).
+
+Example:
+```bash
+docker run --rm -ti -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --pool-size 2 --keep-alive
+```
 
 ### E-Mail Notifications
 
@@ -160,7 +172,7 @@ LUIGI_SENDGRID_APIKEY=<your-api-key-here>
 `--env-file .env`:
 
 ```bash
-docker run -v /mydata:/data --env-file .env gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'
+docker run --rm -ti -v /mydata:/data --env-file .env gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'
 ```
 
 #### SMTP Server
@@ -188,7 +200,7 @@ LUIGI_SMTP_USERNAME=<login-to-your-email-account>
 `--env-file .env`:
 
 ```bash
-docker run -v /mydata:/data --env-file .env gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'
+docker run --rm -ti -v /mydata:/data --env-file .env gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'
 ```
 
 ### History Persistence
@@ -197,5 +209,5 @@ Task history is collected to SQLite database. If you want to persist the
 database, you need to mount the `/luigi` directory. This can be done via:
 
 ```bash
-docker run -v tasks-history:/luigi -v /mydata:/data gmrukwa/msi-preprocessing
+docker run --rm -ti -v tasks-history:/luigi -v /mydata:/data gmrukwa/msi-preprocessing
 ```

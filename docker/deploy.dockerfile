@@ -17,6 +17,8 @@ COPY components components
 
 COPY pipeline pipeline
 
+COPY plot.py plot.py
+
 COPY test test
 
 RUN python -m unittest discover

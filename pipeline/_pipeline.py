@@ -1,3 +1,5 @@
+import os
+
 import luigi
 import luigi.notifications
 
@@ -12,15 +14,23 @@ class PreprocessingPipeline(luigi.Task):
         description="If specified, exports spectra as csv files",
         significant=False, visibility=luigi.parameter.ParameterVisibility.HIDDEN
     )
+    pool_size = luigi.IntParameter(
+        default=os.cpu_count() or 1,
+        description='Size of parallel pool to use for computations. Choose carefully '
+        'to not exceed the memory.',
+        significant=False, visibility=luigi.parameter.ParameterVisibility.HIDDEN
+    )
 
     def requires(self):
         for dataset in self.datasets:
-            yield AssembleMetadata(dataset=dataset)
+            yield AssembleMetadata(dataset=dataset, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield MergeDataset(dataset=dataset, datasets=self.datasets)
+            yield MergeDataset(dataset=dataset, datasets=self.datasets,
+                               pool_size=self.pool_size)
         if self.export_csv:
             for dataset in self.datasets:
-                yield ExportCsv(dataset=dataset, datasets=self.datasets)
+                yield ExportCsv(dataset=dataset, datasets=self.datasets,
+                                pool_size=self.pool_size)
 
 
 @PreprocessingPipeline.event_handler(luigi.Event.SUCCESS)
