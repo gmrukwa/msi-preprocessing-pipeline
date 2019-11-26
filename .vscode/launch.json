@@ -15,7 +15,9 @@
                 "PreprocessingPipeline",
                 "--datasets",
                 "[\"my-dataset1\",\"my-dataset2\"]",
-                "--export-csv"
+                "--export-csv",
+                "--pool-size",
+                "2"
             ]
         }
     ]
