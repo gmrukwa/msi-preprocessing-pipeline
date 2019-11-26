@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 rm -rf /data/06-*
 rm -rf /data/07-*
 rm -rf /data/08-*
