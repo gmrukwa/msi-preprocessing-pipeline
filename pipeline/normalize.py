@@ -54,7 +54,7 @@ class NormalizeTIC(BaseTask):
         self.set_status_message('Loading data')
         reference, spectra = self.input()
         reference = np.loadtxt(reference.path, delimiter=',')
-        spectra = np.load(spectra.path)
+        spectra = np.load(spectra.path, mmap_mode='r')
         self.set_status_message('Computing reference TIC')
         reference_tic = np.sum(reference)
         logger.info("Reference TIC: {0}".format(reference_tic))
