@@ -36,7 +36,7 @@ class RemoveBaseline(BaseTask):
         mz_axis, spectra = self.input()
         mz_axis = np.loadtxt(mz_axis.path, delimiter=',')
         remover = partial(adaptive_remove, mz_axis)
-        spectra = np.load(spectra.path)
+        spectra = np.load(spectra.path, mmap_mode='r')
         self.set_status_message('Removing baseline')
         with Pool(processes=self.pool_size) as pool:
             lowered = pool.map(

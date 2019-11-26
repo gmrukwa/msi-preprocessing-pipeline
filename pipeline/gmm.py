@@ -303,7 +303,7 @@ class MergeDataset(BaseTask):
         indices = load_csv(indices.path, dtype=int)
         lengths = load_csv(lengths.path, dtype=int)
         mu = load_csv(mu.path).reshape(1, -1)
-        spectra = np.load(spectra.path)
+        spectra = np.load(spectra.path, mmap_mode='r')
 
         self.set_status_message('Merging components')
         merged = mdl.apply_merging(spectra, mdl.Matches(indices, lengths))

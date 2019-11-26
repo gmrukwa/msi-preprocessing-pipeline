@@ -54,7 +54,7 @@ class PaFFT(BaseTask):
         self.set_status_message('Loading data')
         mzs = np.loadtxt(mzs.path, delimiter=',')
         reference = np.loadtxt(reference.path, delimiter=',')
-        spectra = np.load(spectra.path)
+        spectra = np.load(spectra.path, mmap_mode='r')
         self.set_status_message('Spectra alignment')
         align = partial(pafft, mzs=mzs, reference_counts=reference)
         aligned = [
