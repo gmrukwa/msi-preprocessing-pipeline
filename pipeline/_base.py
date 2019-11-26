@@ -24,6 +24,13 @@ logger = logging.getLogger('luigi-interface')
 class BaseTask(luigi.Task):
     OUTPUT_DIR = '/data'
     INPUT_DIR = '/data'
+    
+    pool_size = luigi.IntParameter(
+        default=os.cpu_count() or 1,
+        description='Size of parallel pool to use for computations. Choose carefully '
+        'to not exceed the memory.',
+        significant=False, visibility=luigi.parameter.ParameterVisibility.HIDDEN
+    )
 
     def _as_target(self, fname: str):
         return luigi.LocalTarget(os.path.join(self.OUTPUT_DIR, fname))

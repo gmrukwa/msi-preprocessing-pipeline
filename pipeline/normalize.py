@@ -17,9 +17,10 @@ class ExtractTICReference(ExtractReference):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield DetectOutliers(datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield PaFFT(dataset=dataset, datasets=self.datasets)
+            yield PaFFT(dataset=dataset, datasets=self.datasets,
+                        pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("tic_normalization_reference.csv")
@@ -40,8 +41,10 @@ class NormalizeTIC(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield ExtractTICReference(datasets=self.datasets)
-        yield PaFFT(dataset=self.dataset, datasets=self.datasets)
+        yield ExtractTICReference(datasets=self.datasets,
+                                  pool_size=self.pool_size)
+        yield PaFFT(dataset=self.dataset, datasets=self.datasets,
+                    pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))

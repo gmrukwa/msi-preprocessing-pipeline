@@ -33,9 +33,10 @@ class ExtractGMMReference(ExtractReference):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield DetectOutliers(datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield NormalizeTIC(dataset=dataset, datasets=self.datasets)
+            yield NormalizeTIC(dataset=dataset, datasets=self.datasets,
+                               pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("gmm_reference.csv")
@@ -53,8 +54,10 @@ class ResampleGMMReference(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield FindResamplingAxis(datasets=self.datasets)
-        yield ExtractGMMReference(datasets=self.datasets)
+        yield FindResamplingAxis(datasets=self.datasets,
+                                 pool_size=self.pool_size)
+        yield ExtractGMMReference(datasets=self.datasets,
+                                  pool_size=self.pool_size)
 
     def output(self):
         yield self._as_target('resampled_gmm_reference.csv')
@@ -87,7 +90,8 @@ class BuildGMM(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return ResampleGMMReference(datasets=self.datasets)
+        return ResampleGMMReference(datasets=self.datasets,
+                                    pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('mu.csv')
@@ -121,7 +125,7 @@ class FilterComponents(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return BuildGMM(datasets=self.datasets)
+        return BuildGMM(datasets=self.datasets, pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('gmm_var_selection.csv')
@@ -203,9 +207,12 @@ class Convolve(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield FilterComponents(datasets=self.datasets)
-        yield FindResamplingAxis(datasets=self.datasets)
-        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets)
+        yield FilterComponents(datasets=self.datasets,
+                               pool_size=self.pool_size)
+        yield FindResamplingAxis(datasets=self.datasets,
+                                 pool_size=self.pool_size)
+        yield NormalizeTIC(dataset=self.dataset, datasets=self.datasets,
+                           pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))
@@ -235,7 +242,8 @@ class MergeComponents(HelperTask):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        return FilterComponents(datasets=self.datasets)
+        return FilterComponents(datasets=self.datasets,
+                                pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('merged_start_indices.csv')
@@ -277,8 +285,9 @@ class MergeDataset(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield Convolve(dataset=self.dataset, datasets=self.datasets)
-        yield MergeComponents(datasets=self.datasets)
+        yield Convolve(dataset=self.dataset, datasets=self.datasets,
+                       pool_size=self.pool_size)
+        yield MergeComponents(datasets=self.datasets, pool_size=self.pool_size)
     
     def output(self):
         yield self._as_target('{0}.npy'.format(self.dataset))

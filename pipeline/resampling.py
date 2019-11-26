@@ -121,7 +121,8 @@ class ResampleDataset(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        return FindResamplingAxis(datasets=self.datasets)
+        return FindResamplingAxis(datasets=self.datasets,
+                                  pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))

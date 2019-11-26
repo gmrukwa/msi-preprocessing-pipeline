@@ -19,9 +19,10 @@ class ExtractPaFFTReference(ExtractReference):
     datasets = luigi.ListParameter(description="Names of the datasets to use")
 
     def requires(self):
-        yield DetectOutliers(datasets=self.datasets)
+        yield DetectOutliers(datasets=self.datasets, pool_size=self.pool_size)
         for dataset in self.datasets:
-            yield RemoveBaseline(dataset=dataset, datasets=self.datasets)
+            yield RemoveBaseline(dataset=dataset, datasets=self.datasets,
+                                 pool_size=self.pool_size)
     
     def output(self):
         return self._as_target("pafft_reference.csv")
@@ -37,9 +38,12 @@ class PaFFT(BaseTask):
         visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     def requires(self):
-        yield FindResamplingAxis(datasets=self.datasets)
-        yield ExtractPaFFTReference(datasets=self.datasets)
-        yield RemoveBaseline(dataset=self.dataset, datasets=self.datasets)
+        yield FindResamplingAxis(datasets=self.datasets,
+                                 pool_size=self.pool_size)
+        yield ExtractPaFFTReference(datasets=self.datasets,
+                                    pool_size=self.pool_size)
+        yield RemoveBaseline(dataset=self.dataset, datasets=self.datasets,
+                             pool_size=self.pool_size)
 
     def output(self):
         return self._as_target("{0}.npy".format(self.dataset))
