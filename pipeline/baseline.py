@@ -1,7 +1,7 @@
 from functools import partial
+from multiprocessing import Pool
 import os
 
-from functional import pmap
 import luigi
 import numpy as np
 from tqdm import tqdm
@@ -37,10 +37,12 @@ class RemoveBaseline(BaseTask):
         remover = partial(adaptive_remove, mz_axis)
         spectra = np.load(spectra.path)
         self.set_status_message('Removing baseline')
-        lowered = pmap(remover,
-                       tqdm(LuigiTqdm(spectra, self),
-                            desc='Baseline removal'),
-                       chunksize=800)
+        with Pool(processes=self.pool_size) as pool:
+            lowered = pool.map(
+                remover,
+                tqdm(LuigiTqdm(spectra, self), desc='Baseline removal'),
+                chunksize=800
+            )
         self.set_status_message('Saving result')
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:

@@ -1,7 +1,7 @@
 from functools import partial
+from multiprocessing import Pool
 import os
 
-from functional import pmap
 import luigi
 import numpy as np
 from tqdm import tqdm
@@ -61,7 +61,8 @@ class NormalizeTIC(BaseTask):
         rescale = partial(scale_to_tic, reference_tic=reference_tic)
         spectra = LuigiTqdm(spectra, self)
         spectra = tqdm(spectra, desc='TIC normalization')
-        normalized = pmap(rescale, spectra, chunksize=800)
+        with Pool(processes=self.pool_size) as pool:
+            normalized = pool.map(rescale, spectra, chunksize=800)
         self.set_status_message('Saving results')
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
