@@ -136,6 +136,18 @@ Building GMM model takes longer time (at least 1 hour), so be patient.
 
 ## Advanced
 
+### CPUs Limit
+
+It may happen that the data is actually too big to be copied across all your CPUs.
+Then it may be useful to limit the number of the CPU cores exploited.
+You can do this via additional switch `--pool-size`. By default all cores
+are used (or single one, when detection was impossible).
+
+Example:
+```bash
+docker run --rm -ti -v /mydata:/data -p 8082:8082 gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]' --pool-size 2 --keep-alive
+```
+
 ### E-Mail Notifications
 
 You can simply add e-mail notifications to your configuration.
