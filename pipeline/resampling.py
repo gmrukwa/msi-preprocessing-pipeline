@@ -1,4 +1,5 @@
 from functools import partial, reduce
+import gc
 import os
 
 from functional import (
@@ -136,7 +137,8 @@ class ResampleDataset(BaseTask):
             partial(LuigiTqdm, task=self),
             progress_bar('resampling dataset'),
             for_each(spectrum_sampling_pipe(new_axis),
-                     parallel=True, chunksize=800)
+                     parallel=True, chunksize=800),
+            tee(lambda _: gc.collect())
         )
 
         resampled = dataset_sampling_pipe(

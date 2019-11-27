@@ -1,3 +1,4 @@
+import gc
 import os
 
 import luigi
@@ -38,7 +39,7 @@ class DetectOutliers(BaseTask):
     def run(self):
         self.set_status_message('Loading data')
         tics = [
-            np.load(spectra.path).sum(axis=1)
+            np.load(spectra.path, mmap_mode='r').sum(axis=1)
             for spectra in LuigiTqdm(self.input(), self)
         ]
         self.set_status_message('Outlier detection')
