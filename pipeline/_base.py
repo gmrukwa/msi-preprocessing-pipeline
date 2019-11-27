@@ -39,7 +39,7 @@ class BaseTask(luigi.Task):
 
 @BaseTask.event_handler(luigi.Event.FAILURE)
 @BaseTask.event_handler(luigi.Event.SUCCESS)
-def cleanup(task):
+def cleanup(*args, **kwargs):
     gc.collect()
 
 
