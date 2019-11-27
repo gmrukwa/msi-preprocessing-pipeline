@@ -16,7 +16,6 @@ import numpy as np
 
 from components.io_utils import text_files, try_loadtxt
 from components.spectrum.resampling import estimate_new_axis
-
 from pipeline._base import *
 
 
