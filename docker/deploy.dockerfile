@@ -25,6 +25,8 @@ RUN python -m unittest discover
 
 RUN rm -rf test
 
+COPY luigi.cfg luigi.cfg
+
 # Luigi scheduler port
 EXPOSE 8082
 
