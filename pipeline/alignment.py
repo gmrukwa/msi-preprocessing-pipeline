@@ -1,5 +1,6 @@
 from functools import partial
 import gc
+from multiprocessing import Pool
 import os
 
 import luigi
@@ -57,10 +58,9 @@ class PaFFT(BaseTask):
         spectra = np.load(spectra.path, mmap_mode='r')
         self.set_status_message('Spectra alignment')
         align = partial(pafft, mzs=mzs, reference_counts=reference)
-        aligned = [
-            align(spectrum) for spectrum
-            in tqdm(LuigiTqdm(spectra, self), desc='Alignment')
-        ]
+        with Pool(processes=self.pool_size) as pool:
+            aligned = pool.map(
+                align, tqdm(LuigiTqdm(spectra, self), desc='Alignment'))
         self.set_status_message('Saving results')
         del spectra
         gc.collect()
