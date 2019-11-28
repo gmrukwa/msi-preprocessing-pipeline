@@ -80,7 +80,7 @@ class ExtractReference(HelperTask):
         approvals = [np.load(approval.path) for approval in approvals]
         self.set_status_message('Computing references')
         references = [
-            np.load(spectra.path)[selection].mean(axis=0)
+            np.load(spectra.path, mmap_mode='r')[selection].mean(axis=0)
             for selection, spectra in zip(approvals, LuigiTqdm(datasets, self))
         ]
         counts = [np.sum(approval) for approval in approvals]
