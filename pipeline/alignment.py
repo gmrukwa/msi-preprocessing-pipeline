@@ -67,3 +67,13 @@ class PaFFT(BaseTask):
         with self.output().temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, aligned)
+
+
+if __name__ == '__main__':
+    from memory_profiler import profile
+    PaFFT.run = profile(PaFFT.run)
+    if os.path.exists('/data/04-pafft-aligned/my-dataset1.npy'):
+        os.remove('/data/04-pafft-aligned/my-dataset1.npy')
+    luigi.build([
+        PaFFT(dataset='my-dataset1', datasets=['my-dataset1', 'my-dataset2'])
+    ], local_scheduler=True)

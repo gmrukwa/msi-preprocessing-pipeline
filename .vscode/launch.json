@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Memory profiler",
+            "type": "python",
+            "request": "launch",
+            "module": "memory_profiler",
+            "args": ["${file}"]
+        },
+        {
             "name": "Run pipeline",
             "type": "python",
             "request": "launch",

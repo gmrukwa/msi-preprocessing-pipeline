@@ -36,17 +36,25 @@ class RemoveBaseline(BaseTask):
         mz_axis, spectra = self.input()
         mz_axis = np.loadtxt(mz_axis.path, delimiter=',')
         remover = partial(adaptive_remove, mz_axis)
-        spectra = np.load(spectra.path, mmap_mode='r')
+        # spectra = np.load(spectra.path, mmap_mode='r')
+        spectra = np.load(spectra.path)
         self.set_status_message('Removing baseline')
+        spectra = tqdm(LuigiTqdm(spectra, self), desc='Baseline removal')
         with Pool(processes=self.pool_size) as pool:
-            lowered = pool.map(
-                remover,
-                tqdm(LuigiTqdm(spectra, self), desc='Baseline removal'),
-                chunksize=800
-            )
+            lowered = pool.map(remover, spectra, chunksize=800)
         self.set_status_message('Saving result')
         del spectra
         gc.collect()
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, lowered)
+
+
+if __name__ == '__main__':
+    from memory_profiler import profile
+    RemoveBaseline.run = profile(RemoveBaseline.run)
+    if os.path.exists('/data/02-baseline-removed/my-dataset1.npy'):
+        os.remove('/data/02-baseline-removed/my-dataset1.npy')
+    luigi.build([
+        RemoveBaseline(dataset='my-dataset1', datasets=['my-dataset1', 'my-dataset2'])
+    ], local_scheduler=True)

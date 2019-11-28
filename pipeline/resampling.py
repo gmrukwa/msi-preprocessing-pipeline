@@ -146,3 +146,13 @@ class ResampleDataset(BaseTask):
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, resampled)
+
+
+if __name__ == '__main__':
+    from memory_profiler import profile
+    ResampleDataset.run = profile(ResampleDataset.run)
+    if os.path.exists('/data/01-resampled/my-dataset1.npy'):
+        os.remove('/data/01-resampled/my-dataset1.npy')
+    luigi.build([
+        ResampleDataset(dataset='my-dataset1', datasets=['my-dataset1', 'my-dataset2'])
+    ], local_scheduler=True)
