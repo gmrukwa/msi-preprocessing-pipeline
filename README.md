@@ -202,12 +202,3 @@ LUIGI_SMTP_USERNAME=<login-to-your-email-account>
 ```bash
 docker run --rm -ti -v /mydata:/data --env-file .env gmrukwa/msi-preprocessing '["my-dataset1","my-dataset2"]'
 ```
-
-### History Persistence
-
-Task history is collected to SQLite database. If you want to persist the
-database, you need to mount the `/luigi` directory. This can be done via:
-
-```bash
-docker run --rm -ti -v tasks-history:/luigi -v /mydata:/data gmrukwa/msi-preprocessing
-```

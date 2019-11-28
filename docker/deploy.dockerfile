@@ -33,8 +33,6 @@ EXPOSE 8082
 # Data mount point
 VOLUME /data
 
-RUN mkdir /luigi
-
 COPY entrypoint.sh entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
