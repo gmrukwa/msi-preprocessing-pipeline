@@ -131,7 +131,7 @@ class ResampleDataset(BaseTask):
         self.set_status_message('Loading data')
         new_axis = np.loadtxt(self.input().path, delimiter=',')
 
-        dataset_sampling_pipe = pipe(
+        resampled = pipe(
             text_files, list,
             tee(lambda _: self.set_status_message('Resampling dataset')),
             partial(LuigiTqdm, task=self),
@@ -139,12 +139,10 @@ class ResampleDataset(BaseTask):
             for_each(spectrum_sampling_pipe(new_axis),
                      parallel=True, chunksize=800),
             tee(lambda _: gc.collect())
-        )
-
-        resampled = dataset_sampling_pipe(
-            os.path.join(self.INPUT_DIR, self.dataset))
+        )(os.path.join(self.INPUT_DIR, self.dataset))
 
         self.set_status_message('Saving results')
+        gc.collect()
         with self.output().temporary_path() as tmp_path:
             with open(tmp_path, 'wb') as outfile:
                 np.save(outfile, resampled)
