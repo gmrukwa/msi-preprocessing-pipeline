@@ -32,6 +32,7 @@ class RemoveBaseline(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
 
     def run(self):
+        # TODO: Wrap as script
         self.set_status_message('Loading data')
         mz_axis, spectra = self.input()
         mz_axis = np.loadtxt(mz_axis.path, delimiter=',')

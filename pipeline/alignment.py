@@ -51,6 +51,7 @@ class PaFFT(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
 
     def run(self):
+        # TODO: Wrap as script
         mzs, reference, spectra = self.input()
         self.set_status_message('Loading data')
         mzs = np.loadtxt(mzs.path, delimiter=',')
