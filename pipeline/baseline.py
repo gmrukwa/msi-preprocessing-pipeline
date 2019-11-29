@@ -34,7 +34,7 @@ class RemoveBaseline(BaseTask):
                 spectra.path,
                 tmp_path,  # destination
                 str(self.pool_size)
-            ], check=True, capture_output=True)
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 if __name__ == '__main__':

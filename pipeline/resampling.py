@@ -123,7 +123,7 @@ class ResampleDataset(BaseTask):
                 os.path.join(self.INPUT_DIR, self.dataset),  # dataset path
                 self.input().path,  # mz axis path
                 tmp_path  # destination path
-            ], check=True, capture_output=True)
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 if __name__ == '__main__':

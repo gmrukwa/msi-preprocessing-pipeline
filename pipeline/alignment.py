@@ -54,7 +54,7 @@ class PaFFT(BaseTask):
                 spectra.path,
                 str(self.pool_size),
                 tmp_path  # destination
-            ], check=True, capture_output=True)
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 if __name__ == '__main__':
