@@ -13,6 +13,8 @@ RUN mkdir /app
 
 WORKDIR /app
 
+COPY bin bin
+
 COPY components components
 
 COPY pipeline pipeline

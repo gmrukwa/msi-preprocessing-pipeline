@@ -1,13 +1,7 @@
-from functools import partial
-import gc
-from multiprocessing import Pool
 import os
+import subprocess
 
 import luigi
-import numpy as np
-from tqdm import tqdm
-
-from components.spectrum.alignment import pafft
 
 from pipeline._base import *
 from pipeline.baseline import RemoveBaseline
@@ -52,18 +46,22 @@ class PaFFT(BaseTask):
 
     def run(self):
         mzs, reference, spectra = self.input()
-        self.set_status_message('Loading data')
-        mzs = np.loadtxt(mzs.path, delimiter=',')
-        reference = np.loadtxt(reference.path, delimiter=',')
-        spectra = np.load(spectra.path, mmap_mode='r')
-        self.set_status_message('Spectra alignment')
-        align = partial(pafft, mzs=mzs, reference_counts=reference)
-        with Pool(processes=self.pool_size) as pool:
-            aligned = pool.map(
-                align, tqdm(LuigiTqdm(spectra, self), desc='Alignment'))
-        self.set_status_message('Saving results')
-        del spectra
-        gc.collect()
-        with self.output().temporary_path() as tmp_path, \
-                open(tmp_path, 'wb') as out_file:
-            np.save(out_file, aligned)
+        with self.output().temporary_path() as tmp_path:
+            subprocess.run([
+                "/usr/local/bin/python", "-m", "bin.alignment",
+                mzs.path,
+                reference.path,
+                spectra.path,
+                str(self.pool_size),
+                tmp_path  # destination
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+if __name__ == '__main__':
+    from memory_profiler import profile
+    PaFFT.run = profile(PaFFT.run)
+    if os.path.exists('/data/04-pafft-aligned/my-dataset1.npy'):
+        os.remove('/data/04-pafft-aligned/my-dataset1.npy')
+    luigi.build([
+        PaFFT(dataset='my-dataset1', datasets=['my-dataset1', 'my-dataset2'])
+    ], local_scheduler=True)
