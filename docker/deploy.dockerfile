@@ -1,7 +1,5 @@
 FROM spectreteam/python_msi:v5.0.0
 
-RUN chmod -R +rw /usr/local/lib/python3.5/site-packages/MatlabAlgorithms
-
 RUN apt-get update &&\
     apt-get install -y procps &&\
     rm -rf /var/lib/apt/lists/*
