@@ -119,7 +119,7 @@ class ResampleDataset(BaseTask):
     def run(self):
         with self.output().temporary_path() as tmp_path:
             subprocess.run([
-                "python", "-m", "bin.resampling",
+                "/usr/local/bin/python", "-m", "bin.resampling",
                 os.path.join(self.INPUT_DIR, self.dataset),  # dataset path
                 self.input().path,  # mz axis path
                 tmp_path  # destination path

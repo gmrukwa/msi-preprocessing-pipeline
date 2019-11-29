@@ -48,7 +48,7 @@ class PaFFT(BaseTask):
         mzs, reference, spectra = self.input()
         with self.output().temporary_path() as tmp_path:
             subprocess.run([
-                "python", "-m", "bin.alignment",
+                "/usr/local/bin/python", "-m", "bin.alignment",
                 mzs.path,
                 reference.path,
                 spectra.path,

@@ -29,7 +29,7 @@ class RemoveBaseline(BaseTask):
         mz_axis, spectra = self.input()
         with self.output().temporary_path() as tmp_path:
             subprocess.run([
-                "python", "-m", "bin.baseline",
+                "/usr/local/bin/python", "-m", "bin.baseline",
                 mz_axis.path,
                 spectra.path,
                 tmp_path,  # destination
