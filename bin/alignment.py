@@ -15,9 +15,9 @@ if __name__ == '__main__':
     SPECTRA = sys.argv[3]
     POOL_SIZE = int(sys.argv[4])
     DESTINATION = sys.argv[5]
-    mzs = np.loadtxt(mzs.path, delimiter=',')
-    reference = np.loadtxt(reference.path, delimiter=',')
-    spectra = np.load(spectra.path, mmap_mode='r')
+    mzs = np.loadtxt(MZS, delimiter=',')
+    reference = np.loadtxt(REFERENCE, delimiter=',')
+    spectra = np.load(SPECTRA, mmap_mode='r')
     align = partial(pafft, mzs=mzs, reference_counts=reference)
     with Pool(processes=POOL_SIZE) as pool:
         aligned = pool.map(
