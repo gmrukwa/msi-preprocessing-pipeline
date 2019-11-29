@@ -1,13 +1,7 @@
-from functools import partial
-import gc
-from multiprocessing import Pool
 import os
+import subprocess
 
 import luigi
-import numpy as np
-from tqdm import tqdm
-
-from components.spectrum.alignment import pafft
 
 from pipeline._base import *
 from pipeline.baseline import RemoveBaseline
@@ -51,23 +45,16 @@ class PaFFT(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
 
     def run(self):
-        # TODO: Wrap as script
         mzs, reference, spectra = self.input()
-        self.set_status_message('Loading data')
-        mzs = np.loadtxt(mzs.path, delimiter=',')
-        reference = np.loadtxt(reference.path, delimiter=',')
-        spectra = np.load(spectra.path, mmap_mode='r')
-        self.set_status_message('Spectra alignment')
-        align = partial(pafft, mzs=mzs, reference_counts=reference)
-        with Pool(processes=self.pool_size) as pool:
-            aligned = pool.map(
-                align, tqdm(LuigiTqdm(spectra, self), desc='Alignment'))
-        self.set_status_message('Saving results')
-        del spectra
-        gc.collect()
-        with self.output().temporary_path() as tmp_path, \
-                open(tmp_path, 'wb') as out_file:
-            np.save(out_file, aligned)
+        with self.output().temporary_path() as tmp_path:
+            subprocess.run([
+                "python", "-m", "bin.alignment",
+                mzs.path,
+                reference.path,
+                spectra.path,
+                str(self.pool_size),
+                tmp_path  # destination
+            ], check=True, capture_output=True)
 
 
 if __name__ == '__main__':
