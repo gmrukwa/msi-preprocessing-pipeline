@@ -1,13 +1,7 @@
-from functools import partial
-import gc
-from multiprocessing import Pool
 import os
+import subprocess
 
 import luigi
-import numpy as np
-from tqdm import tqdm
-
-from components.spectrum.baseline import adaptive_remove
 
 from pipeline._base import *
 from pipeline.resampling import FindResamplingAxis, ResampleDataset
@@ -32,22 +26,15 @@ class RemoveBaseline(BaseTask):
         return self._as_target("{0}.npy".format(self.dataset))
 
     def run(self):
-        # TODO: Wrap as script
-        self.set_status_message('Loading data')
         mz_axis, spectra = self.input()
-        mz_axis = np.loadtxt(mz_axis.path, delimiter=',')
-        remover = partial(adaptive_remove, mz_axis)
-        spectra = np.load(spectra.path, mmap_mode='r')
-        self.set_status_message('Removing baseline')
-        spectra = tqdm(LuigiTqdm(spectra, self), desc='Baseline removal')
-        with Pool(processes=self.pool_size) as pool:
-            lowered = pool.map(remover, spectra, chunksize=800)
-        self.set_status_message('Saving result')
-        del spectra
-        gc.collect()
         with self.output().temporary_path() as tmp_path:
-            with open(tmp_path, 'wb') as outfile:
-                np.save(outfile, lowered)
+            subprocess.run([
+                "python", "-m", "bin.baseline",
+                mz_axis.path,
+                spectra.path,
+                tmp_path,  # destination
+                str(self.pool_size)
+            ], check=True, capture_output=True)
 
 
 if __name__ == '__main__':
