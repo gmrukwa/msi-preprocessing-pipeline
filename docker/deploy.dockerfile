@@ -1,5 +1,7 @@
 FROM spectreteam/python_msi:v5.0.0
 
+ENV MCR_CACHE_ROOT /tmp/mcr_cache
+
 RUN apt-get update &&\
     apt-get install -y procps &&\
     rm -rf /var/lib/apt/lists/*

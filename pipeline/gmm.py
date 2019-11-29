@@ -317,3 +317,19 @@ class MergeDataset(BaseTask):
         with spectra_dst.temporary_path() as tmp_path, \
                 open(tmp_path, 'wb') as out_file:
             np.save(out_file, merged)
+
+
+if __name__ == '__main__':
+    from memory_profiler import profile
+    BuildGMM.run = profile(BuildGMM.run)
+    if os.path.exists(os.path.join(BuildGMM.OUTPUT_DIR, 'mu.csv')):
+        os.remove(os.path.join(BuildGMM.OUTPUT_DIR, 'mu.csv'))
+    if os.path.exists(os.path.join(BuildGMM.OUTPUT_DIR, 'sig.csv')):
+        os.remove(os.path.join(BuildGMM.OUTPUT_DIR, 'sig.csv'))
+    if os.path.exists(os.path.join(BuildGMM.OUTPUT_DIR, 'w.csv')):
+        os.remove(os.path.join(BuildGMM.OUTPUT_DIR, 'w.csv'))
+    if os.path.exists(os.path.join(BuildGMM.OUTPUT_DIR, 'gmm_model.json')):
+        os.remove(os.path.join(BuildGMM.OUTPUT_DIR, 'gmm_model.json'))
+    luigi.build([
+        BuildGMM(datasets=['my-dataset1', 'my-dataset2'])
+    ], local_scheduler=True)
