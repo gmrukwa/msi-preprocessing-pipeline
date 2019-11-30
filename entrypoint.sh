@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # start the scheduler
-sudo luigid &>/dev/null &
+luigid &>/dev/null &
 
 # check if we should keep scheduler alive after tasks finish
 args=("$@")
@@ -20,4 +20,4 @@ if [ "$last" = "--keep-alive" ]; then
 fi
 
 # kill the scheduler
-sudo pkill luigid
+pkill luigid

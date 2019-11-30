@@ -37,14 +37,14 @@ RUN rm -rf test
 
 COPY luigi.cfg luigi.cfg
 
-RUN mkdir /luigi &&\
-    chmod o+w /luigi
-
 # Luigi scheduler port
 EXPOSE 8082
 
 # Data mount point
 VOLUME /data
+
+# History preservation
+VOLUME /luigi
 
 COPY entrypoint.sh entrypoint.sh
 
