@@ -37,6 +37,9 @@ RUN rm -rf test
 
 COPY luigi.cfg luigi.cfg
 
+RUN mkdir /luigi &&\
+    chmod o+w /luigi
+
 # Luigi scheduler port
 EXPOSE 8082
 
